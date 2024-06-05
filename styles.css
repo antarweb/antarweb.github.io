@@ -1,7 +1,10 @@
 :root {
-  --backtotop: rgba(236, 72, 163, 0.87);
-  --background-body: rgba(255, 247, 255, 0.95); 
+  --backtotop: rgba(33, 150, 243, 0.75);
+  --background-body: rgba(125, 196, 252, 0.75); 
 }
+
+@import url('https://fonts.googleapis.com/css2?family=Carattere&display=swap');
+
 body {
     font-family: 'Lato';
     margin: 0;
@@ -24,11 +27,11 @@ header {
 }
 
 .logo {
-    font-size: 2rem;
-    font-weight: bold;
-    color: #333;
-font-family: 'Te Quirtez', sans-serif;
-border:0px solid black;
+  font-size: 2rem;
+  font-weight: bold;
+  color: #333;
+  font-family: "Carattere", cursive;
+  border:0px solid black;
 }
 
 .navbar ul {
