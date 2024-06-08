@@ -318,6 +318,7 @@ document.getElementById('contact-form').addEventListener('submit', function(even
     window.location.href = mailtoLink;
 });
     </script>
+
   <script>
     function typeText(sourceElement, typewriterElement, caretElement, speed) {
       return new Promise((resolve) => {
@@ -356,7 +357,7 @@ document.getElementById('contact-form').addEventListener('submit', function(even
       }
     }
 
-    window.onload = startTyping;
+    document.addEventListener('DOMContentLoaded', startTyping);
   </script>
   <script>
     // Get the button
