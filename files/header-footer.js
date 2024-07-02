@@ -21,7 +21,7 @@
     // Function to fetch and display additional links
     async function loadLinks() {
         try {
-            const response = await fetch('https://antarweb.github.io/links/links.html');
+            const response = await fetch('https://antarweb.github.io/files/links.html');
             const data = await response.text();
             const parser = new DOMParser();
             const doc = parser.parseFromString(data, 'text/html');
