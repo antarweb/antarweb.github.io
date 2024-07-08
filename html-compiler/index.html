@@ -1,0 +1,341 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Code Compiler</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.7/codemirror.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.7/addon/fold/foldgutter.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.7/addon/selection/active-line.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.7/addon/edit/matchtags.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.7/addon/edit/closetag.min.css">
+    
+
+        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.1.1/css/all.min.css">
+        <link rel="stylesheet" href="https://antarweb.github.io/files/header-footer.css">
+    
+<style>
+        body {
+            margin: 0;
+            padding: 0px;
+background: rgba(185, 224, 255, 0.20);
+        }
+        .CodeMirror {
+            border: 1px solid #ccc;
+            max-height: 300px;
+            overflow-x: hidden;
+            text-align: left;
+        }
+        .btn {
+            padding: 8px 12px;
+            cursor: pointer;
+            margin: 10px 10px 0 ;
+            background-color: #007bff;
+            color: white;
+            border: none;
+            border-radius: 4px;
+        }
+        .btn:hover {
+            background-color: #0056b3;
+        }
+        #output-container {
+width:99%;
+            margin-top: 10px;
+            padding: 10px 0;
+            border: 1px solid #ccc;
+border-radius: 10px; 
+background: white;
+        }
+        iframe {
+            width: 100%;
+            height: 400px;
+            border: 0;
+            border-radius: 0;
+            background-color: white;
+        }
+        #result-code {
+            width: 100%;
+            height: 150px;
+            margin-top: 10px;
+            border: 0px solid #ccc;
+            border-radius:10px;
+            padding: 10px;
+            box-sizing: border-box;
+            resize: none;
+        }
+      .ResultContainer {
+  display: none;
+  width:99%;
+  border: 1px solid #CCC;
+  border-radius:10px;
+  background: white;
+  margin: 10px 0px;
+  }
+       h3{
+            text-decoration: underline;
+            text-underline-offset: 0.3em;
+            margin:20px 0 0 0;
+        }
+       h1{
+       margin-bottom: 4px;
+       }
+     .copy-button {
+ padding: 10px 20px;
+ margin: 20px auto;
+ background-color: #008CBA;
+ color: white;
+ border: none;
+ border-radius: 5px;
+ cursor: pointer;
+ transition: background-color 0.3s ease;
+}
+    </style>
+</head>
+<body>
+
+        <header>
+            <a style="text-decoration: none;" href="https://antarweb.github.io">
+                <div class="logo">Antar Saha</div>
+            </a>
+            <nav class="navbar">
+                <ul>
+                    <li><a href="https://antarweb.github.io/about.html">About</a></li>
+                    <li><a href="https://antarweb.github.io/portfolio.html">Portfolio</a></li>
+                    <li><a href="https://antarweb.github.io/contact.html">Contact</a></li>
+                    <li><span class="dropdown">
+                        <a href="javascript:void(0)" class="dropbtn">More Links<span class="arrow"></span></a>
+                        <div class="dropdown-content"></div></span>
+                    </li>
+                </ul>
+                <div class="menu-icon" onclick="toggleMenu()">
+                    <div class="bar1"></div>
+                    <div class="bar2"></div>
+                    <div class="bar3"></div>
+                </div>
+            </nav>
+        </header>
+    
+
+    <center>
+        <h1>HTML Compiler</h1>
+        <textarea id="code" name="code"><!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>HTML Compiler</title>
+  <style>
+    body {
+      margin: 0;
+      padding: 0px;
+      min-height: 100px;
+      }
+    .intro {
+      display: block;
+      color: #007bff;
+      text-align: center;
+      font-weight: bold;
+      padding:20px 0;
+      }
+/* Type Your CSS CODE Here */
+
+  </style>
+</head>
+<body>
+  <div class="intro">
+Hi, Antar Saha made me.
+  </div>
+<!--Type Your HTML CODE Here-->
+
+<script>
+//Type Your SCRIPT CODE here
+
+</script>
+</body>
+</html></textarea>
+        <button class="btn" onclick="editor.undo()">Undo</button>
+        <button class="btn" onclick="resetCode()">Reset Code</button>
+        <button class="btn" onclick="editor.redo()">Redo</button>
+
+        <div id="output-container">
+<h3>Preview HTML</h3><br>
+            <iframe id="output" onload='javascript:(function(o){o.style.height=o.contentWindow.document.body.scrollHeight+"px";}(this));' scrolling="no"></iframe>
+        </div>
+        <button class="btn" onclick="beautifyCode()">Beautify Code</button>
+        <button class="btn" onclick="minifyCode()">Minify Code</button>
+
+<div id="result-container" class="ResultContainer">
+<h3>Beautified/Minified Code</h3>
+    <textarea id="result-code" class="copyTextarea"></textarea>
+
+<button onclick="copyText()" class="copy-button">Copy Full Code</button>
+</div>
+<div style="max-width: 600px; margin-bottom:30px;">
+        <button class="btn" onclick="downloadCode()">Download Code as HTML</button>
+        <button class="btn" onclick="previewInNewWindow()">Preview in New Window</button>
+</div>
+    </center>
+
+        <button class="back-to-top" onclick="scrollToTop()"><i class="arrow"></i></button>
+        <footer>
+            <div class="share-buttons tooltip expand" data-title="Share My Portfolio">
+                <a href="https://www.facebook.com/sharer/sharer.php?u=https://antarweb.github.io" target="_blank" class="facebook">
+                    <i class="fab fa-facebook-f"></i>
+                </a>
+                <a href="https://www.instagram.com/?url=https://antarweb.github.io" target="_blank" class="instagram">
+                    <i class="fab fa-instagram"></i>
+                </a>
+                <a href="https://www.linkedin.com/shareArticle?mini=true&url=https://antarweb.github.io" target="_blank" class="linkedin">
+                    <i class="fab fa-linkedin-in"></i>
+                </a>
+                <a href="https://wa.me/?text=Check Antar On : https://antarweb.github.io" target="_blank" class="whatsapp">
+                    <i class="fab fa-whatsapp"></i>
+                </a>
+                <a href="https://t.me/share/url?url=https://antarweb.github.io&text=Check this out!" target="_blank" class="telegram">
+                    <i class="fab fa-telegram-plane"></i>
+                </a>
+            </div>
+            <div class="footer-links">
+                <div class="footer-link-left"></div>
+                <div class="footer-dropdown">
+                    <a href="javascript:void(0)" class="dropbtn">More Links<span class="arrow"></span></a>
+                    <div class="footer-dropdown-content"></div>
+                </div>
+                <div class="footer-link-right"></div>
+            </div>
+            <div id="copyright-section">
+                &copy; 2024 Designed By <a href="https://antarweb.github.io">ANTAR</a>. All rights reserved.
+            </div>
+        </footer>
+        
+    
+<script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.7/codemirror.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.7/mode/javascript/javascript.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.7/mode/css/css.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.7/mode/xml/xml.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.7/mode/htmlmixed/htmlmixed.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.7/addon/fold/foldcode.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.7/addon/fold/foldgutter.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.7/addon/fold/brace-fold.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.7/addon/fold/xml-fold.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.7/addon/fold/markdown-fold.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.7/addon/fold/comment-fold.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.7/addon/selection/active-line.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/js-beautify/1.13.0/beautify-html.min.js"></script>
+<script>
+        var editor = CodeMirror.fromTextArea(document.getElementById('code'), {
+            mode: 'htmlmixed',
+            lineNumbers: true,
+            lineWrapping: true,
+            styleActiveLine: true,
+            matchTags: {bothTags: true},
+            autoCloseTags: true,
+            foldGutter: true,
+            gutters: ['CodeMirror-linenumbers', 'CodeMirror-foldgutter'],
+            extraKeys: {
+                'Ctrl-Z': function(cm) { cm.undo(); },
+                'Cmd-Z': function(cm) { cm.undo(); },
+                'Ctrl-Y': function(cm) { cm.redo(); },
+                'Cmd-Y': function(cm) { cm.redo(); },
+            }
+        });
+
+        editor.on('change', function() {
+            updateOutput();
+            saveToLocalStorage();
+        });
+
+        function resetCode() {
+            editor.setValue('');
+            document.getElementById('result-code').value = '';
+        }
+
+        function beautifyCode() {
+            var code = editor.getValue();
+            var beautifiedCode = html_beautify(code, {
+                indent_size: 4,
+                extra_liners: [],
+                unformatted: ['a', 'abbr', 'area', 'audio', 'b', 'bdi', 'bdo', 'br', 'button', 'canvas', 'cite', 'code', 'data', 'datalist', 'del', 'dfn', 'em', 'embed', 'i', 'iframe', 'img', 'input', 'ins', 'kbd', 'keygen', 'label', 'map', 'mark', 'math', 'meter', 'noscript', 'object', 'output', 'progress', 'q', 'ruby', 's', 'samp', 'select', 'small', 'span', 'strong', 'sub', 'sup', 'svg', 'template', 'textarea', 'time', 'u', 'var', 'video', 'wbr', 'text', 'acronym', 'address', 'big', 'dt', 'ins', 'strike', 'tt', 'xmp']
+            });
+            document.getElementById('result-code').value = beautifiedCode;
+            editor.setValue(beautifiedCode);
+document.getElementById('result-container').style.display = 'block';
+        }
+
+        function minifyCode() {
+            var code = editor.getValue();
+            var minifiedCode = minifyHTMLCSSJS(code);
+            document.getElementById('result-code').value = minifiedCode;
+document.getElementById('result-container').style.display = 'block';
+        }
+
+function minifyHTMLCSSJS(code) {
+    // Remove comments
+    code = code.replace(/<!--[\s\S]*?-->/g, '');
+    // Remove whitespace between tags
+    code = code.replace(/>\s+</g, '><');
+    // Remove extra spaces, newlines, and tabs
+    code = code.replace(/\s{2,}/g, ' ');
+    code = code.replace(/[\n\r\t]/g, '');
+    // Minify inline CSS
+    code = code.replace(/<style\b[^>]*>([\s\S]*?)<\/style>/gi, function(match, css) {
+        return '<style>' + css.replace(/\s{2,}/g, ' ').replace(/\/\*[\s\S]*?\*\//g, '').replace(/\s*([{}:;,])\s*/g, '$1').replace(/;\}/g, '}') + '</style>';
+    });
+
+    // Replace < and > with HTML entities
+    code = code.replace(/</g, '<').replace(/>/g, '>');
+
+    return code;
+}
+
+
+        function updateOutput() {
+            var iframe = document.getElementById('output');
+            var code = editor.getValue();
+            iframe.contentWindow.document.open();
+            iframe.contentWindow.document.write(code);
+            iframe.contentWindow.document.close();
+        }
+
+        function saveToLocalStorage() {
+            localStorage.setItem('code', editor.getValue());
+        }
+
+function downloadCode() {
+    var code = document.getElementById('result-code').value;
+    var blob = new Blob([code], { type: 'text/html' });
+    var url = URL.createObjectURL(blob);
+    var a = document.createElement('a');
+    a.href = url;
+    a.download = 'code.html';
+    a.click();
+    URL.revokeObjectURL(url);
+}
+
+        function previewInNewWindow() {
+            var code = editor.getValue();
+            var win = window.open();
+            win.document.open();
+            win.document.write(code);
+            win.document.close();
+        }
+
+        // Load code from local storage if available
+        window.onload = function() {
+            var savedCode = localStorage.getItem('code');
+            if (savedCode) {
+                editor.setValue(savedCode);
+            }
+        };
+    </script>
+<script>
+function copyText() {
+  var textarea = document.querySelector(".copyTextarea");
+  textarea.select();
+  document.execCommand("copy");
+  alert("Text copied to clipboard!");
+}
+</script>
+<script src="https://antarweb.github.io/files/header-footer.js"></script>
+</body>
+</html>
