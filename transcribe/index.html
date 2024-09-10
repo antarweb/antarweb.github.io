@@ -1,0 +1,312 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Audio Transcription Player</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 40px auto;
+            padding: 20px;
+            text-align: center;
+        }
+        #audio-controls {
+            margin-top: 20px;
+        }
+        #time-display {
+            margin-top: 10px;
+            font-size: 16px;
+        }
+        #speed-display {
+            margin-top: 5px;
+            font-size: 16px;
+        }
+        #loop-status {
+            margin-top: 5px;
+            font-size: 16px;
+            color: red;
+        }
+        textarea {
+            width: 100%;
+            height: 300px;
+            margin-top: 20px;
+            padding: 10px;
+            font-size: 16px;
+            resize: vertical;
+        }
+        #downloadButton {
+            margin-top: 10px;
+            padding: 10px 20px;
+            background-color: #28a745;
+            color: white;
+            border: none;
+            cursor: pointer;
+            border-radius: 4px;
+        }
+        #downloadButton:hover {
+            background-color: #218838;
+        }
+        #fileLabel {
+            display: inline-block;
+            padding: 10px 20px;
+            background-color: #007BFF;
+            color: white;
+            cursor: pointer;
+            border-radius: 4px;
+            margin-top: 20px;
+        }
+        #fileLabel:hover {
+            background-color: #0056b3;
+        }
+        #audioFile {
+            display: none;
+        }
+        .mobile-controls button {
+            padding: 10px;
+            margin: 5px;
+            font-size: 16px;
+        }
+        audio {
+            width: 100%;
+            margin-top: 20px;
+            background-color: #f5f5f5;
+            border: 2px solid #007BFF;
+            border-radius: 4px;
+        }
+    </style>
+</head>
+<body>
+
+    <h1>Audio Transcription Player</h1>
+
+    <!-- File Selection -->
+    <label for="audioFile" id="fileLabel">Select Audio File</label>
+    <input type="file" id="audioFile" accept="audio/*">
+
+    <!-- Display Audio File Name -->
+    <div id="audio-name" style="margin-top: 10px; font-size: 16px;">No file selected</div>
+
+    <!-- Audio Player -->
+    <audio id="audioPlayer" controls></audio>
+    
+    <!-- Audio Controls -->
+    <div id="audio-controls">
+        <div id="time-display">Time: 00:00 / 00:00</div>
+        <div id="speed-display">Playback Speed: 1x</div>
+        <div id="loop-status" style="display: none;">Looping Active</div>
+    </div>
+
+    <!-- Transcription Textarea -->
+    <textarea id="transcription" placeholder="Type your transcription here..."></textarea>
+
+    <!-- Download Transcription Button -->
+    <button id="downloadButton">Download Transcription</button>
+
+    <!-- Mobile Control Buttons -->
+    <div class="mobile-controls">
+        <button onclick="togglePlayPause()">Play/Pause (Ctrl + Space)</button>
+        <button onclick="skipBackward()">Backward 5s (Ctrl + Left)</button>
+        <button onclick="skipForward()">Forward 5s (Ctrl + Right)</button>
+        <button onclick="increaseSpeed()">Speed Up (Shift + Up)</button>
+        <button onclick="decreaseSpeed()">Slow Down (Shift + Down)</button>
+        <button onclick="boldCurrentLine()">Bold Current Line (Ctrl + B)</button>
+        <button onclick="addTimestamp()">Add Timestamp (Alt + T)</button>
+        <button onclick="toggleLoop()">Loop Last 10s (Ctrl + L)</button>
+        <button onclick="loop5Sec()">Loop Last 5s (Alt + J)</button>
+    </div>
+
+    <script>
+        const audioPlayer = document.getElementById('audioPlayer');
+        const audioFileInput = document.getElementById('audioFile');
+        const transcriptionArea = document.getElementById('transcription');
+        const timeDisplay = document.getElementById('time-display');
+        const speedDisplay = document.getElementById('speed-display');
+        const loopStatus = document.getElementById('loop-status');
+        const audioNameDisplay = document.getElementById('audio-name');
+        const downloadButton = document.getElementById('downloadButton');
+
+        let isLooping = false;
+        let loopStartTime = 0;
+        let loopEndTime = 0;
+        let audioFileName = '';
+
+        // Handle File Selection and Display Audio Name
+        audioFileInput.addEventListener('change', function(event) {
+            const file = event.target.files[0];
+            if (file) {
+                const fileURL = URL.createObjectURL(file);
+                audioPlayer.src = fileURL;
+                isLooping = false;
+                updateTimeDisplay();
+                audioFileName = file.name.split('.').slice(0, -1).join('.'); // Remove file extension
+                audioNameDisplay.textContent = `Selected File: ${audioFileName}`;
+            }
+        });
+
+        // Update Time and Speed Display
+        audioPlayer.addEventListener('timeupdate', updateTimeDisplay);
+        audioPlayer.addEventListener('ratechange', () => {
+            speedDisplay.textContent = `Playback Speed: ${audioPlayer.playbackRate.toFixed(1)}x`;
+        });
+
+        function updateTimeDisplay() {
+            const currentTime = formatTime(audioPlayer.currentTime);
+            const duration = formatTime(audioPlayer.duration);
+            timeDisplay.textContent = `Time: ${currentTime} / ${duration}`;
+        }
+
+        function formatTime(seconds) {
+            const mins = Math.floor(seconds / 60);
+            const secs = Math.floor(seconds % 60);
+            return `${mins}:${secs < 10 ? '0' : ''}${secs}`;
+        }
+
+        // Keyboard Controls
+        document.addEventListener('keydown', function(event) {
+            // Play/Pause: Ctrl + Space
+            if (event.ctrlKey && event.code === 'Space') {
+                event.preventDefault();
+                togglePlayPause();
+            }
+
+            // Increase Speed: Shift + Up Arrow
+            if (event.shiftKey && event.code === 'ArrowUp') {
+                event.preventDefault();
+                increaseSpeed();
+            }
+
+            // Decrease Speed: Shift + Down Arrow
+            if (event.shiftKey && event.code === 'ArrowDown') {
+                event.preventDefault();
+                decreaseSpeed();
+            }
+
+            // Forward 5 Seconds: Ctrl + Right Arrow
+            if (event.ctrlKey && event.code === 'ArrowRight') {
+                event.preventDefault();
+                skipForward();
+            }
+
+            // Backward 5 Seconds: Ctrl + Left Arrow
+            if (event.ctrlKey && event.code === 'ArrowLeft') {
+                event.preventDefault();
+                skipBackward();
+            }
+
+            // Loop Last 10 Seconds: Ctrl + L
+            if (event.ctrlKey && (event.key === 'l' || event.key === 'L')) {
+                event.preventDefault();
+                toggleLoop();
+            }
+
+            // Loop Last 5 Seconds: Alt + J
+            if (event.altKey && (event.key === 'j' || event.key === 'J')) {
+                event.preventDefault();
+                loop5Sec();
+            }
+
+            // Bold Current Line: Ctrl + B
+            if (event.ctrlKey && event.code === 'KeyB') {
+                event.preventDefault();
+                boldCurrentLine();
+            }
+
+            // Add Timestamp: Alt + T
+            if (event.altKey && event.code === 'KeyT') {
+                event.preventDefault();
+                addTimestamp();
+            }
+        });
+
+        function togglePlayPause() {
+            if (audioPlayer.paused) {
+                audioPlayer.play();
+            } else {
+                audioPlayer.pause();
+            }
+        }
+
+        function increaseSpeed() {
+            audioPlayer.playbackRate = Math.min(audioPlayer.playbackRate + 0.1, 3.0);
+        }
+
+        function decreaseSpeed() {
+            audioPlayer.playbackRate = Math.max(audioPlayer.playbackRate - 0.1, 0.5);
+        }
+
+        function skipForward() {
+            audioPlayer.currentTime = Math.min(audioPlayer.currentTime + 5, audioPlayer.duration);
+        }
+
+        function skipBackward() {
+            audioPlayer.currentTime = Math.max(audioPlayer.currentTime - 5, 0);
+        }
+
+        // Toggle Loop Last 10 Seconds
+        function toggleLoop() {
+            if (!isLooping) {
+                loopStartTime = Math.max(audioPlayer.currentTime - 10, 0);
+                loopEndTime = audioPlayer.currentTime;
+                isLooping = true;
+                loopStatus.style.display = 'block';
+            } else {
+                isLooping = false
+
+                loopStatus.style.display = 'none';
+            }
+        }
+
+        // Loop Last 5 Seconds
+        function loop5Sec() {
+            if (!isLooping) {
+                loopStartTime = Math.max(audioPlayer.currentTime - 5, 0);
+                loopEndTime = audioPlayer.currentTime;
+                isLooping = true;
+                loopStatus.style.display = 'block';
+            } else {
+                isLooping = false;
+                loopStatus.style.display = 'none';
+            }
+        }
+
+       
+    // Bold the Current Line in Textarea
+    function boldCurrentLine() {
+        const start = transcriptionArea.selectionStart;
+        const end = transcriptionArea.selectionEnd;
+        const text = transcriptionArea.value;
+        const before = text.substring(0, start);
+        const selected = text.substring(start, end);
+        const after = text.substring(end);
+        transcriptionArea.value = before + '<strong>' + selected + '</strong>' + after;
+    }
+
+    // Add Timestamp in Textarea
+    function addTimestamp() {
+        const timestamp = `[${formatTime(audioPlayer.currentTime)}] `;
+        const cursorPos = transcriptionArea.selectionStart;
+        const text = transcriptionArea.value;
+        transcriptionArea.value = text.substring(0, cursorPos) + timestamp + text.substring(cursorPos);
+    }
+
+    // Loop handling
+    audioPlayer.addEventListener('timeupdate', () => {
+        if (isLooping && audioPlayer.currentTime >= loopEndTime) {
+            audioPlayer.currentTime = loopStartTime;
+        }
+    });
+
+    // Download Text as .txt File (With Audio Name)
+    downloadButton.addEventListener('click', function() {
+        const text = transcriptionArea.value;
+        const blob = new Blob([text], { type: 'text/plain' });
+        const anchor = document.createElement('a');
+        anchor.href = URL.createObjectURL(blob);
+        anchor.download = audioFileName ? `${audioFileName}.txt` : 'transcription.txt';
+        anchor.click();
+    });
+</script>
+
+</body>
+</html>
