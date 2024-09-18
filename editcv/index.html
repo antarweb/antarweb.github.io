@@ -15,6 +15,7 @@
 href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
     <link rel="stylesheet" href="https://antarweb.github.io/editcv/cv.css">
     <link rel="stylesheet" href="https://antarweb.github.io/files/header-footer.css">
+    <link rel="stylesheet" href="https://unpkg.com/cropperjs/dist/cropper.min.css">
 
 <style type="text/css" media="print">
 @page{margin:0 30px ! important;size:auto}html,body{margin:0 ! important;padding:0 ! important}.my-cv{width:840px ! important}.container{margin:10px ! important}.resume{height:90.5vh}.pagebreak{page-break-after:always}.left-column{background-color:#e9eef1 ! important;-webkit-print-color-adjust:exact;overflow:hidden!important}.right-column{width:55%;padding:0 20px}.print{margin:60px}.no_print{display:none;visibility:hidden}header{display:none ! important;visibility:hidden}footer{display:none;visibility:hidden}.letter-body{margin: auto 50px;}
@@ -49,6 +50,68 @@ href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css"
     cursor: pointer;
   }
 </style>
+
+    <style>
+        .profile-picture {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 100%;
+            height: 240px;
+            overflow: hidden;
+        }
+        img {
+            border: 12px solid #A7C9D8;
+            border-radius: 50%;
+            width: 200px;
+            height: 200px;
+            object-fit: cover;
+        }
+        #cropperModal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.8);
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+        }
+        #cropperContainer {
+            background: white;
+            padding: 20px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            width: 70vw;
+            height: 70vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            overflow: hidden;
+            position: relative;
+        }
+        #cropperContainer img {
+            max-width: 100%;
+            height: auto;
+            border: none;
+            border-radius: 0;
+            pointer-events: none;
+        }
+        #cropperContainer button {
+            margin-top: 10px;
+            padding: 10px 20px;
+            border: none;
+            background-color: #007bff;
+            color: white;
+            cursor: pointer;
+            border-radius: 5px;
+            font-size: 16px;
+        }
+        #cropperContainer button.cancel {
+            background-color: #6c757d;
+        }
+    </style>
 </head>
 <body>
     <header>
@@ -73,6 +136,15 @@ href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css"
     </nav>
 </header>
 
+
+    <!-- Cropper Modal -->
+    <div id="cropperModal">
+        <div id="cropperContainer">
+            <img id="cropperImage" src="" alt="Crop Image">
+            <button id="cropImageButton">Crop & Save</button>
+            <button id="cancelCropButton" class="cancel">Cancel</button>
+        </div>
+    </div>
 
 <div class="container">
 
@@ -140,9 +212,10 @@ Antar Saha
     <div class="resume">
         <div class="left-column"><br>
 <div class="top">
-            <div class="profile-picture">
-                <img src="https://antarweb.github.io/image/antar.jpeg" alt="Antar Saha">
-            </div>
+    <div class="profile-picture">
+        <img id="profile-img" src="https://antarweb.github.io/image/antar.jpeg" alt="Antar Saha">
+        <input type="file" id="imageInput" style="display: none;">
+    </div>
 </div>
             <div class="contact">
                 <div class="heading">Contact</div>
@@ -447,5 +520,81 @@ document.getElementById('TodaysDate').innerHTML = out_string; //set the html of 
   showSlide(currentSlide);
 </script>
 
+    <script src="https://unpkg.com/cropperjs/dist/cropper.min.js"></script>
+    <script>
+const profilePictureDiv = document.querySelector('.profile-picture');
+const profileImg = document.getElementById('profile-img');
+const imageInput = document.getElementById('imageInput');
+const cropperModal = document.getElementById('cropperModal');
+const cropperImage = document.getElementById('cropperImage');
+const cropImageButton = document.getElementById('cropImageButton');
+const cancelCropButton = document.getElementById('cancelCropButton');
+
+let cropper;
+let imageChanged = false; // Flag to track if the image has changed
+
+profilePictureDiv.addEventListener('click', function() {
+    imageInput.click(); // Opens file input
+});
+
+imageInput.addEventListener('change', function(event) {
+    const file = event.target.files[0];
+    if (file) {
+        const reader = new FileReader();
+        reader.onload = function(e) {
+            const newImageUrl = e.target.result;
+
+            // If cropper instance exists, destroy it and hide the modal
+            if (cropper) {
+                cropper.destroy();
+                cropperModal.style.display = 'none';
+            }
+
+            // Update the cropperImage source and display the modal
+            cropperImage.src = newImageUrl;
+            cropperModal.style.display = 'flex';
+
+            // Initialize Cropper.js
+            cropper = new Cropper(cropperImage, {
+                aspectRatio: 1,
+                viewMode: 1,
+            });
+
+            // Reset imageChanged flag
+            imageChanged = true;
+        }
+        reader.readAsDataURL(file); // Read the file as a data URL
+    }
+});
+
+cropImageButton.addEventListener('click', function() {
+    if (cropper) {
+        const canvas = cropper.getCroppedCanvas({
+            width: 600,
+            height: 600
+        });
+        profileImg.src = canvas.toDataURL(); // Set the cropped image to the img element
+        cropperModal.style.display = 'none';
+        cropper.destroy();
+    }
+});
+
+cancelCropButton.addEventListener('click', function() {
+    cropperModal.style.display = 'none';
+    if (cropper) {
+        cropper.destroy();
+    }
+});
+
+// Disable long-click context menu on the profile image
+profileImg.addEventListener('contextmenu', function(e) {
+    e.preventDefault(); // Prevent the context menu from appearing
+});
+
+// Disable long-click context menu on the cropper image
+cropperImage.addEventListener('contextmenu', function(e) {
+    e.preventDefault(); // Prevent the context menu from appearing
+});
+    </script>
 </body>
 </html>
