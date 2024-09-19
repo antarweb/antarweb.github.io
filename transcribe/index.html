@@ -1,0 +1,986 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.6.0/css/all.min.css">
+    <link rel="stylesheet" href="https://antarweb.github.io/FontAwesome6.2.0Pro/css/all.css">
+    <script src="https://cdn.jsdelivr.net/npm/docx@7.2.0/build/index.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/FileSaver.js/2.0.5/FileSaver.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/mammoth/1.4.2/mammoth.browser.min.js"></script>
+
+
+    <title>Audio Transcription Player</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 10px auto;
+            padding: 10px;
+            text-align: center;
+        }
+        #audio-controls {
+            margin-top: 20px;
+        }
+        #time-display,
+       #speed-display,
+      #loop-status {
+            margin-top: 10px;
+            font-size: 16px;
+        }
+        #transcription {
+            width: 100%;
+            height: 300px;
+            margin-top: 0px;
+            font-size: 16px;
+            text-align: left;
+            border: 2px solid #007BFF;
+background: #F9F9FA;
+            caret-color: blue;
+            padding: 0px;
+            overflow-y: auto;
+            white-space: pre-wrap;
+        }
+        #transcription:focus {
+            outline: none;
+        }
+        #select-audio,
+       .import,
+       .export {
+            font-size: 16px;
+            font-weight: bold;
+            padding: 10px;
+            margin: 0px 5px;
+            background-color: #28a745;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+        #audioFile {
+            display: none;
+        }
+        .mobile-controls { margin: 5px 0px; }
+
+        .mobile-controls button,
+        #toggleBoldButton {
+            font-size: 16px;
+            font-weight: bold;
+            padding: 10px;
+            margin: 5px;
+            background-color: #28a745;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+        .controls {
+            border: 2px solid skyblue;
+            padding: 10px;
+            margin-top: 10px;
+        }
+        .controls h2 {
+            border-bottom: 2px solid black;
+            display: inline-block;
+        }
+        .controls button {
+            width: 240px;
+            font-size: 16px;
+            font-weight: bold;
+            padding: 10px;
+            margin: 5px;
+            background-color: skyblue;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+        audio {
+            width: 100%;
+            margin-top: 20px;
+            background-color: #f5f5f5;
+            border: 2px solid #007BFF;
+            border-radius: 4px;
+        }
+        #wordCount,
+       #lineCount {
+            display: inline;
+            font-size: 14px;
+            color: #333;
+        }
+        i { font-size: 18px; }
+        .loop-icon {
+            position: relative;
+            display: inline-block;
+            font-size: 18px;
+            color: white;
+        }
+        .loop-icon span {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            font-size: 7px;
+            color: white;
+            font-weight: normal;
+        }
+
+#boldButton.active,
+.mobile-controls button.active,
+ #toggleBoldButton.active {
+    background-color: #1E90FF; 
+    color: white;
+}
+
+        #toggleBoldButton{margin-top: 10px;}
+
+        #boldStatus{font-weight: bold;}
+
+       .timestamp{color: red;}
+
+#fileNameDisplay {
+font-size: 12px; 
+margin-bottom: 10px; 
+}
+
+
+    </style>
+    <style>
+.toggle-container {
+  display: block;
+  position: absolute;
+  right: 10px;
+  top: 10px;
+}
+
+.toggle-container input {
+  -webkit-appearance: none;
+  position: relative;
+  width: 55px;
+  height: 30px;
+  background-image: url(https://i.postimg.cc/857jHw2q/Screenshot-2020-04-16-at-1-07-06-PM.png);
+  background-size: cover;
+  border-radius: 50px;
+  border: 2px solid silver;
+  outline: none;
+  transition: background-image .5s;
+  box-shadow: 0px 2px 5px 1px gray;
+}
+
+.toggle-container input:before {
+  content: "";
+  position: absolute;
+  top: 1px;
+  left: 1px;
+  height: 25px;
+  width: 25px;
+  border-radius: 50px;
+  transition: all .5s ease-in-out;
+  background: url('https://antarweb.github.io/transcribe/day.png') no-repeat center;
+  background-size: contain;
+  transform: rotate(0deg);
+  opacity: 1;
+}
+
+.toggle-container input:checked {
+  background-image: url(https://i.postimg.cc/Hn0nstVK/Screenshot-2020-04-16-at-1-07-19-PM.png);
+  transition: background-image .5s;
+}
+
+.toggle-container input:checked:before {
+  background: url('https://antarweb.github.io/transcribe/night.png') no-repeat center;
+  background-size: contain;
+  transform: translate(100%) rotate(360deg);
+  opacity: 1;
+  transition: all .5s ease-in-out;
+}
+        body.nightmode, #audioPlayer.nightmode {
+            background-color: #2c3e50; 
+            color: #ecf0f1;
+        }
+#wordCount.nightmode,
+       #lineCount.nightmode {color: white}
+#transcription.nightmode{background-color:#6A85A0}
+    </style>
+</head>
+<body oninput="updateWordLineCount()">
+    
+  <div class="toggle-container">
+<input id="togglenightmode" type="checkbox">
+  </div>
+
+    <h1>Audio Transcription Player</h1>
+
+    <label for="audioFile" id="select-audio">Select Audio File</label>
+    <input type="file" id="audioFile" accept="audio/*">
+
+    <div id="audio-name" style="margin-top: 20px; font-size: 16px;">No file selected</div>
+
+    <audio id="audioPlayer" controls></audio>
+
+    <div id="audio-controls">
+        <div id="time-display">Time: 00:00 / 00:00</div>
+        <div id="speed-display">Playback Speed: 1x</div>
+        <div id="loop-status" style="display: none;color:red;">Looping Active</div>
+    </div>
+
+    <button id="toggleBoldButton">Toggle Bold Mode : <span id="boldStatus">Off</span></button>
+
+    <div class="mobile-controls">
+        <button id="undoButton">Undo</button>
+        <button onclick="decreaseSpeed()"><i class="fa-regular fa-gauge-min"></i></button>
+        <button onclick="increaseSpeed()"><i class="fa-regular fa-gauge-max"></i></button>
+        <button id="redoButton">Redo</button>
+        <br>
+        <button onclick="toggleLoop5Sec()">
+        <div class="loop-icon">
+            <i class="fa-solid fa-repeat" title="Loop 5 seconds"></i>
+            <span>5</span>
+        </div>
+    </button>
+        <button id="boldButton" onclick="boldCurrentLine()"><i class="fa-solid fa-bold" title="Bold"></i></button>
+        <button onclick="skipBackward()"><i class="fa-solid fa-backward" title="Backward"></i></button>
+        <button onclick="togglePlayPause()"><i class="fa-solid fa-play-pause"></i></button>
+        <button onclick="skipForward()"><i class="fa-solid fa-forward" title="Forward"></i></button>
+        <button onclick="addTimestamp()"><i class="fa-regular fa-clock"></i></button>
+        <button onclick="toggleLoop10Sec()">
+        <div class="loop-icon">
+            <i class="fa-solid fa-repeat" title="Loop 10 seconds"></i>
+            <span>10</span>
+        </div>
+    </button>
+    </div>
+
+    <div id="transcription" contenteditable="true" class="highlight-line" aria-placeholder="Type your transcription here..."><p></br></p></div>
+<div style="margin:10px;">
+    <div id="lineCount">Lines: 0</div>
+    <div id="wordCount">Words: 0</div><br>
+</div>
+
+    <div id="fileNameDisplay"></div>
+    <button id="importButton" class="import">Import DOCX <i class="fa-solid fa-inbox-in"></i></button>
+    <input type="file" id="importFile" accept=".txt,.doc,.docx" style="display: none;" />
+
+    <button id="downloadDocx" class="export">Export DOCX <i class="fa-solid fa-inbox-out"></i></button>
+
+    <div class="controls">
+        <h2> Keyboard Hotkeys </h2><br>
+        <button onclick="togglePlayPause()">Play/Pause (Ctrl + Space)</button><br>
+        <button onclick="skipBackward()">Backward 5s (Ctrl + Left)</button>
+        <button onclick="skipForward()">Forward 5s (Ctrl + Right)</button><br>
+        <button onclick="increaseSpeed()">Speed Up (Ctrl + Up)</button>
+        <button onclick="decreaseSpeed()">Slow Down (Ctrl + Down)</button><br>
+        <button onclick="boldCurrentLine()">Bold Current Line (Ctrl + B)</button>
+        <button onclick="addTimestamp()">Add Timestamp (Alt + T)</button><br>
+        <button onclick="toggleLoop5Sec()">Loop Last 5s (Ctrl + L)</button>
+        <button onclick="toggleLoop10Sec()">Loop Last 10s (Alt + L)</button><br>
+<button id="importButton">Import DOCX  (Ctrl + O)</button>
+<button id="downloadDocx">Export DOCX (Ctrl + S)</button><br>
+        <button onclick="resetEverything()">Reset All (Ctrl + DELETE)</button>
+    </div>
+
+
+
+    <script>
+        const audioPlayer = document.getElementById('audioPlayer');
+        const audioFileInput = document.getElementById('audioFile');
+        const transcriptionArea = document.getElementById('transcription');
+        const timeDisplay = document.getElementById('time-display');
+        const speedDisplay = document.getElementById('speed-display');
+        const loopStatus = document.getElementById('loop-status');
+        const audioNameDisplay = document.getElementById('audio-name');
+        const wordCount = document.getElementById('wordCount');
+        const lineCount = document.getElementById('lineCount');
+        const undoButton = document.getElementById("undoButton");
+        const redoButton = document.getElementById("redoButton");
+        
+        let isLooping = false;
+        let loopStartTime = 0;
+        let loopEndTime = 0;
+        let audioFileName = '';
+        let isBoldModeOn = false;
+        let isBoldActive = false;
+        
+        // Handle File Selection and Display Audio Name
+        audioFileInput.addEventListener('change', function(event) {
+            const file = event.target.files[0];
+            if (file) {
+                const newAudioFileName = file.name.split('.')[0];  // Remove extension for the file name
+                const fileURL = URL.createObjectURL(file);
+                const savedPlaybackRateKey = `playbackRate_${newAudioFileName}`; // Unique key for each audio file's speed
+                const savedPlaybackRate = localStorage.getItem(savedPlaybackRateKey);
+        
+                // Retrieve the previous file name from localStorage
+                const savedAudioFileName = localStorage.getItem('audioFileName');
+        
+                // Set the new audio source
+                audioPlayer.src = fileURL;
+        
+                // If the same file is reselected, wait for the audio to load and restore the playback speed
+                audioPlayer.addEventListener('canplay', function() {
+                    if (savedAudioFileName === newAudioFileName && savedPlaybackRate) {
+                        audioPlayer.playbackRate = parseFloat(savedPlaybackRate);  // Restore the saved speed
+                    } else {
+                        audioPlayer.playbackRate = 1.0;  // Default playback speed for a new file
+                    }
+        
+                    // Update speed display
+                    speedDisplay.textContent = `Playback Speed: ${audioPlayer.playbackRate.toFixed(1)}x`;
+                }, { once: true });  // Use once:true to ensure this handler only runs once for each file load
+        
+                // Save audio file name and source in localStorage
+                localStorage.setItem('audioFileName', newAudioFileName);
+                localStorage.setItem('audioFileURL', fileURL);
+        
+                updateTimeDisplay();
+                audioNameDisplay.textContent = `Selected File: ${file.name}`;
+            }
+        });
+        
+        // Save the playback rate whenever it changes
+        audioPlayer.addEventListener('ratechange', function() {
+            const savedAudioFileName = localStorage.getItem('audioFileName');
+            if (savedAudioFileName) {
+                const playbackRateKey = `playbackRate_${savedAudioFileName}`; // Unique key for each file
+                localStorage.setItem(playbackRateKey, audioPlayer.playbackRate.toFixed(1));
+                speedDisplay.textContent = `Playback Speed: ${audioPlayer.playbackRate.toFixed(1)}x`;
+            }
+        });
+        
+        // Save playback time and speed
+        audioPlayer.addEventListener('timeupdate', function() {
+            updateTimeDisplay();
+            localStorage.setItem('audioCurrentTime', audioPlayer.currentTime);  // Save current playback time
+        });
+        
+        audioPlayer.addEventListener('ratechange', function() {
+            speedDisplay.textContent = `Playback Speed: ${audioPlayer.playbackRate.toFixed(1)}x`;
+            localStorage.setItem('audioPlaybackRate', audioPlayer.playbackRate);  // Save playback speed
+        });
+        
+        window.addEventListener('load', function() {
+            // Load transcription data from localStorage
+            const savedData = localStorage.getItem('transcriptionData');
+            if (savedData) {
+                transcriptionArea.innerHTML = savedData;
+            }
+        
+            // Load audio file name from localStorage (we can't store the actual file URL across sessions)
+            const savedAudioFileName = localStorage.getItem('audioFileName');
+            const savedCurrentTime = localStorage.getItem('audioCurrentTime');
+            const savedPlaybackRate = localStorage.getItem('audioPlaybackRate');
+        
+            if (savedAudioFileName) {
+                // Inform the user to reselect the file
+                audioNameDisplay.textContent = `Previously selected: ${savedAudioFileName}. Please reselect the file.`;
+            }
+        
+            if (savedCurrentTime) {
+                audioPlayer.currentTime = parseFloat(savedCurrentTime);
+            }
+        
+            if (savedPlaybackRate) {
+                audioPlayer.playbackRate = parseFloat(savedPlaybackRate);
+                speedDisplay.textContent = `Playback Speed: ${audioPlayer.playbackRate.toFixed(1)}x`;
+            }
+        
+            updateWordLineCount();  // Automatically update word and line count on page load
+        });
+        
+        // Update Time and Speed Display
+        audioPlayer.addEventListener('timeupdate', updateTimeDisplay);
+        audioPlayer.addEventListener('ratechange', () => {
+            speedDisplay.textContent = `Playback Speed: ${audioPlayer.playbackRate.toFixed(1)}x`;
+        });
+        
+        function updateTimeDisplay() {
+            const currentTime = formatTime(audioPlayer.currentTime);
+            const duration = formatTime(audioPlayer.duration);
+            timeDisplay.textContent = `Time: ${currentTime} / ${duration}`;
+        }
+        
+        function formatTime(seconds) {
+            const mins = Math.floor(seconds / 60);
+            const secs = Math.floor(seconds % 60);
+            return `${mins}:${secs < 10 ? '0' : ''}${secs}`;
+        }
+        
+        // Keyboard Controls
+        document.addEventListener('keydown', function(event) {
+            if (event.ctrlKey && event.code === 'Space') {
+                event.preventDefault();
+                togglePlayPause();
+            }
+        
+            if (event.ctrlKey && event.code === 'ArrowUp') {
+                event.preventDefault();
+                increaseSpeed();
+            }
+        
+            if (event.ctrlKey && event.code === 'ArrowDown') {
+                event.preventDefault();
+                decreaseSpeed();
+            }
+        
+            if (event.ctrlKey && event.code === 'ArrowRight') {
+                event.preventDefault();
+                skipForward();
+            }
+        
+            if (event.ctrlKey && event.code === 'ArrowLeft') {
+                event.preventDefault();
+                skipBackward();
+            }
+        
+            if (event.ctrlKey && (event.key === 'l' || event.key === 'L')) {
+                event.preventDefault();
+                toggleLoop5Sec();
+            }
+        
+            if (event.altKey && (event.key === 'l' || event.key === 'L')) {
+                event.preventDefault();
+                toggleLoop10Sec();
+            }
+        
+            if (event.ctrlKey && event.code === 'KeyB') {
+                event.preventDefault();
+                boldCurrentLine();
+            }
+        
+            if (event.altKey && event.code === 'KeyT') {
+                event.preventDefault();
+                addTimestamp();
+            }
+        
+            if (event.ctrlKey && event.code === 'Delete') {
+                event.preventDefault();
+                resetEverything();
+            }
+
+if (event.ctrlKey && event.code === 'KeyO') {
+        event.preventDefault();
+document.getElementById('importFile').click();
+    }
+
+if (event.ctrlKey && event.code === 'KeyS') {
+        event.preventDefault();
+document.getElementById('downloadDocx').click(); 
+    }
+        });
+        function keepKeyboardOpen() {
+                var transcriptionArea = document.getElementById("transcription");
+                transcriptionArea.focus(); // Focus the contenteditable div
+            }
+        
+        function togglePlayPause() {
+        keepKeyboardOpen();
+            if (audioPlayer.paused) {
+                audioPlayer.play();
+            } else {
+                audioPlayer.pause();
+            }
+        }
+        
+        function increaseSpeed() {
+            audioPlayer.playbackRate = Math.min(audioPlayer.playbackRate + 0.1, 3.0);
+        }
+        
+        function decreaseSpeed() {
+            audioPlayer.playbackRate = Math.max(audioPlayer.playbackRate - 0.1, 0.1);
+        }
+        
+        function skipForward() {
+        keepKeyboardOpen();
+            audioPlayer.currentTime = Math.min(audioPlayer.currentTime + 5, audioPlayer.duration);
+        }
+        
+        function skipBackward() {
+        keepKeyboardOpen();
+            audioPlayer.currentTime = Math.max(audioPlayer.currentTime - 5, 0);
+        }
+        
+        // Loop handling
+        audioPlayer.addEventListener('timeupdate', () => {
+            if (isLooping && audioPlayer.currentTime >= loopEndTime) {
+                audioPlayer.currentTime = loopStartTime;
+                audioPlayer.play();  // Ensure playback continues
+            }
+        });
+        
+        function toggleLoop5Sec() {
+        keepKeyboardOpen();
+        const loopButton = document.querySelector('button[onclick="toggleLoop5Sec()"]');
+            if (!isLooping) {
+                loopStartTime = Math.max(audioPlayer.currentTime - 5, 0);
+                loopEndTime = audioPlayer.currentTime;
+                isLooping = true;
+                loopStatus.style.display = 'block';
+                loopStatus.textContent = 'Looping 5 seconds';
+                loopButton.classList.add('active');
+            } else {
+                isLooping = false;
+                loopStatus.style.display = 'none';
+                loopButton.classList.remove('active');
+            }
+        }
+        
+        function toggleLoop10Sec() {
+        keepKeyboardOpen();
+        const loopButton = document.querySelector('button[onclick="toggleLoop10Sec()"]');
+            if (!isLooping) {
+                loopStartTime = Math.max(audioPlayer.currentTime - 10, 0);
+                loopEndTime = audioPlayer.currentTime;
+                isLooping = true;
+                loopStatus.style.display = 'block';
+                loopStatus.textContent = 'Looping 10 seconds';
+                loopButton.classList.add('active');
+            } else {
+                isLooping = false;
+                loopStatus.style.display = 'none';
+                loopButton.classList.remove('active');
+            }
+        }
+        
+        // Common function to reset everything
+        function resetEverything() {
+            // Reset audio player
+            audioPlayer.pause();  // Pause the audio if playing
+            audioPlayer.src = ''; // Clear audio source
+            audioPlayer.playbackRate = 1.0;  // Reset playback rate to default
+        
+            // Reset transcription area
+            transcriptionArea.value = '';  // Clear transcription text
+            transcriptionArea.innerHTML = '';  // Clear transcription HTML content
+            updateWordLineCount();  // Reset word/line count
+        
+            // Reset displays
+            timeDisplay.textContent = 'Time: 0:00 / 0:00';  // Reset time display
+            speedDisplay.textContent = 'Playback Speed: 1.0x';  // Reset speed display
+            audioNameDisplay.textContent = 'No File Selected';  // Reset file name display
+            loopStatus.style.display = 'none';  // Hide loop status if visible
+        
+            // Clear all localStorage data for this page
+            localStorage.clear();
+        
+    // Clear all localStorage data related to audio and transcription
+    localStorage.removeItem('audioFileName');  // Remove saved audio file name
+    localStorage.removeItem('audioFileURL');   // Remove saved audio file URL
+    localStorage.removeItem('audioCurrentTime'); // Remove saved playback time
+    localStorage.removeItem('playbackRate_' + localStorage.getItem('audioFileName'));  // Remove saved playback rate for the audio file
+    localStorage.removeItem('transcriptionData'); 
+
+            window.location.reload();
+        
+            alert('All data has been reset.');
+        }
+        
+        // Add event listeners for undo and redo buttons
+            undoButton.addEventListener("click", function() {
+                document.execCommand('undo', false, null);  // Execute undo command
+                transcriptionArea.focus();  // Keep the focus in the contenteditable div
+            });
+        
+            redoButton.addEventListener("click", function() {
+                document.execCommand('redo', false, null);  // Execute redo command
+                transcriptionArea.focus();  // Keep the focus in the contenteditable div
+            });
+        
+ // Add timestamp
+function addTimestamp() {
+    keepKeyboardOpen();
+
+    // Get current time from the audio player and format it
+    const currentTime = formatTime(audioPlayer.currentTime);
+
+    // Create a span for the timestamp with a class
+    const timestampSpan = document.createElement("span");
+    timestampSpan.textContent = ` [${currentTime}] `;
+    timestampSpan.classList.add("timestamp");  // Add a class to identify the span
+
+    // Append the timestamp at the current caret position
+    const selection = window.getSelection();
+    const range = selection.getRangeAt(0);
+    range.deleteContents();
+    range.insertNode(timestampSpan);
+
+    const spaceNode = document.createTextNode('\u00A0');
+    range.setStartAfter(timestampSpan);
+    range.insertNode(spaceNode);
+    range.setStartAfter(spaceNode);
+    range.setEndAfter(spaceNode);
+    selection.removeAllRanges();
+    selection.addRange(range);
+    // Save the updated transcription content to localStorage
+    localStorage.setItem('transcriptionData', transcriptionArea.innerHTML);
+}
+   
+        transcriptionArea.addEventListener('input', function() {
+            // Save the current content to localStorage
+            localStorage.setItem('transcriptionData', transcriptionArea.innerHTML);
+            updateWordLineCount();
+        });
+        
+        // Update word and line counts
+        function updateWordLineCount() {
+            const text = transcriptionArea.innerText || '';
+            const words = text.trim().split(/\s+/).filter(word => word).length;
+            const lines = text.split('\n').filter(line => line.trim() !== '').length;
+            wordCount.textContent = `Words: ${words}`;
+            lineCount.textContent = `Lines: ${lines}`;
+        }
+        document.getElementById('importButton').addEventListener('click', function() {
+    document.getElementById('importFile').click();
+});
+
+document.getElementById('importFile').addEventListener('change', function(event) {
+    const file = event.target.files[0];
+    const fileNameDisplay = document.getElementById('fileNameDisplay');
+    const transcription = document.getElementById('transcription');
+    
+    if (!file) {
+        // If no file is selected, hide the fileNameDisplay
+        fileNameDisplay.style.display = 'none';
+        return;
+    }
+    
+    // Show the fileNameDisplay when a file is selected
+    fileNameDisplay.style.display = 'block';
+    fileNameDisplay.innerText = file.name;
+    
+    const reader = new FileReader();
+
+    if (file.type === "text/plain") {
+        reader.onload = function(e) {
+            const text = e.target.result;
+            transcription.innerText = text;
+
+            // Save plain text to localStorage
+            localStorage.setItem('transcriptionData', text);
+            updateWordLineCount();
+        };
+        reader.readAsText(file);
+
+    } else if (file.type === "application/vnd.openxmlformats-officedocument.wordprocessingml.document") {
+        reader.onload = function(event) {
+            const arrayBuffer = event.target.result;
+            mammoth.convertToHtml({ arrayBuffer: arrayBuffer })
+                .then(function(result) {
+                    transcription.innerHTML = result.value;
+
+                    // Save HTML content to localStorage
+                    localStorage.setItem('transcriptionData', result.value);
+                })
+                .catch(function(err) {
+                    console.error(err);
+                });
+        };
+        reader.readAsArrayBuffer(file);
+
+    } else if (file.type === "application/msword") {
+        alert('Currently, .doc files are not supported directly. Please convert it to .docx format.');
+        fileNameDisplay.style.display = 'none'; // Hide the fileNameDisplay in case of unsupported file
+
+    } else {
+        alert('Unsupported file type. Please upload a .txt, .docx, or .doc file.');
+        fileNameDisplay.style.display = 'none'; // Hide the fileNameDisplay in case of unsupported file
+    }
+});
+
+        
+        document.getElementById('downloadDocx').addEventListener('click', function () {
+            const { Document, Packer, Paragraph, TextRun } = docx;
+        
+function parseHTMLContent(element) {
+    let paragraphs = [];
+    let currentChildren = [];
+    let isInBold = false;
+    let isInItalic = false;
+    let isTimestamp = false;
+
+    function processNode(node) {
+        if (node.nodeType === Node.TEXT_NODE) {
+            if (node.textContent.trim() !== "") {
+                currentChildren.push(new TextRun({
+                    text: node.textContent,
+                    bold: isInBold,
+                    italics: isInItalic,
+                    color: isTimestamp ? "FF0000" : "000000"  // Apply red color for timestamps
+                }));
+            }
+        } else if (node.nodeType === Node.ELEMENT_NODE) {
+            let nodeIsBlock = false;
+
+            if (node.tagName === "DIV" || node.tagName === "P") {
+                nodeIsBlock = true;
+            }
+
+            if (node.tagName === "B" || node.tagName === "STRONG") {
+                isInBold = true;
+            } else if (node.tagName === "I" || node.tagName === "EM") {
+                isInItalic = true;
+            } else if (node.classList.contains("timestamp")) {
+                isTimestamp = true;
+            }
+
+            node.childNodes.forEach(child => processNode(child));
+
+            if (nodeIsBlock && currentChildren.length > 0) {
+                paragraphs.push(new Paragraph({ children: currentChildren }));
+                currentChildren = [];
+            }
+
+            if (node.tagName === "B" || node.tagName === "STRONG") {
+                isInBold = false;
+            } else if (node.tagName === "I" || node.tagName === "EM") {
+                isInItalic = false;
+            } else if (node.classList.contains("timestamp")) {
+                isTimestamp = false;
+            }
+        }
+    }
+
+    processNode(element);
+
+    if (currentChildren.length > 0) {
+        paragraphs.push(new Paragraph({ children: currentChildren }));
+    }
+
+    return paragraphs;
+}
+        
+            // Get the transcription content from the HTML
+            const transcriptionElement = document.getElementById('transcription');
+            const parsedContent = parseHTMLContent(transcriptionElement);
+        
+            // Create a new Document with parsed content
+            const doc = new Document({
+                sections: [{
+                    properties: {},
+                    children: parsedContent
+                }]
+            });
+        
+           // Generate the local date and time in the desired format
+    const now = new Date();
+    const day = now.getDate();
+    const monthNames = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+    const month = monthNames[now.getMonth()];
+    const year = now.getFullYear();
+    const hours = now.getHours().toString().padStart(2, '0');
+    const minutes = now.getMinutes().toString().padStart(2, '0');
+    const localDateTime = `${day}${month}${year}_${hours}${minutes}`;
+
+    // Get the current playback time from the audio player in hours, minutes, and seconds
+    const playedHours = Math.floor(audioPlayer.currentTime / 3600);
+    const playedMinutes = Math.floor((audioPlayer.currentTime % 3600) / 60);
+    const playedSeconds = Math.floor(audioPlayer.currentTime % 60).toString().padStart(2, '0');
+    const playedTime = `${playedHours}h${playedMinutes}min${playedSeconds}sec`;
+
+    // Use the audio file name if available, otherwise default to "transcription"
+    const audioFileName = localStorage.getItem('audioFileName') || 'transcription';
+
+    // Format the filename with audio file name, local date/time, and played time
+    const fileName = `${audioFileName}_${localDateTime}_${playedTime}.docx`;
+
+    // Generate the DOCX file and trigger download
+    Packer.toBlob(doc).then(blob => {
+        saveAs(blob, fileName);  // Save the file with the formatted filename
+    }).catch(err => console.log(err));
+});
+              
+              
+              // Save caret position within a node (text node)
+        function saveCaretPositionWithinNode(node) {
+            const selection = window.getSelection();
+            const range = selection.getRangeAt(0);
+            const preCaretRange = range.cloneRange();
+            preCaretRange.selectNodeContents(node);
+            preCaretRange.setEnd(range.endContainer, range.endOffset);
+            return preCaretRange.toString().length; // Return caret position as an offset
+        }
+        
+        // Restore caret position within a node (text node)
+        function restoreCaretPositionWithinNode(node, offset) {
+            const selection = window.getSelection();
+            const range = document.createRange();
+            let charIndex = 0;
+            let foundCaret = false;
+            let stop = false;
+            const nodeStack = [node];
+        
+            while (!stop && nodeStack.length > 0) {
+                const currentNode = nodeStack.pop();
+                if (currentNode.nodeType === Node.TEXT_NODE) {
+                    const nextCharIndex = charIndex + currentNode.length;
+                    if (!foundCaret && offset >= charIndex && offset <= nextCharIndex) {
+                        range.setStart(currentNode, offset - charIndex);
+                        range.setEnd(currentNode, offset - charIndex);
+                        foundCaret = true;
+                        stop = true;
+                    }
+                    charIndex = nextCharIndex;
+                } else {
+                    for (let i = currentNode.childNodes.length - 1; i >= 0; i--) {
+                        nodeStack.push(currentNode.childNodes[i]);
+                    }
+                }
+            }
+            selection.removeAllRanges();
+            selection.addRange(range);
+        }
+        
+
+
+
+
+
+
+
+
+
+
+
+
+// Toggle Bold Mode On/Off
+document.getElementById('toggleBoldButton').addEventListener('click', function() {
+    keepKeyboardOpen();
+    isBoldModeOn = !isBoldModeOn;
+    const boldStatus = document.getElementById('boldStatus');
+    const toggleBoldButton = document.getElementById('toggleBoldButton');
+    
+    if (isBoldModeOn) {
+        boldStatus.textContent = 'On';
+        boldStatus.style.color = '#FF6347';
+        toggleBoldButton.classList.add('active');
+    } else {
+        boldStatus.textContent = 'Off';
+        boldStatus.style.color = 'white';
+        toggleBoldButton.classList.remove('active');
+    }
+});
+
+// Function to bold/unbold the current line or selection
+function boldCurrentLine() {
+    keepKeyboardOpen();
+    const selection = window.getSelection();
+    if (!selection.rangeCount) return;
+
+    const range = selection.getRangeAt(0);
+    const startContainer = range.startContainer;
+    const startOffset = range.startOffset;
+    let lineElement = startContainer.nodeType === Node.TEXT_NODE
+        ? startContainer.parentNode
+        : startContainer;
+
+    while (lineElement && lineElement.nodeName !== 'DIV' && lineElement.nodeName !== 'P') {
+        lineElement = lineElement.parentNode;
+    }
+
+    if (!lineElement) return;
+
+    if (!isBoldModeOn) {
+        // If Bold Mode is OFF, bold/unbold selected text
+        document.execCommand('bold');
+        // Check if the selection is now bold
+        isBoldActive = document.queryCommandState('bold');
+    } else {
+        // If Bold Mode is ON, bold/unbold the full line
+        const originalHTML = lineElement.innerHTML;
+        const isCurrentlyBold = lineElement.querySelector('b') !== null;
+
+        if (isCurrentlyBold) {
+            lineElement.innerHTML = originalHTML.replace(/<\/?b>/g, '');
+        } else {
+            lineElement.innerHTML = `<b>${originalHTML}</b>`;
+        }
+
+        localStorage.setItem('transcriptionData', transcriptionArea.innerHTML);
+        restoreCaretPosition(lineElement, startOffset);
+        isBoldActive = !isCurrentlyBold;
+    }
+
+    // Update bold button highlight regardless of the mode
+    updateBoldButtonHighlight();
+}
+
+// Function to restore caret position
+function restoreCaretPosition(lineElement, startOffset) {
+    const newRange = document.createRange();
+    const newSelection = window.getSelection();
+
+    let textNode = lineElement.firstChild;
+    let offset = startOffset;
+
+    if (textNode.nodeType === Node.ELEMENT_NODE) {
+        const textNodes = Array.from(textNode.childNodes).filter(node => node.nodeType === Node.TEXT_NODE);
+        if (textNodes.length > 0) {
+            textNode = textNodes[0];
+        }
+    }
+
+    if (textNode) {
+        const textContentLength = textNode.textContent.length;
+        offset = Math.min(offset, textContentLength);
+        newRange.setStart(textNode, offset);
+        newRange.collapse(true);
+    }
+
+    newSelection.removeAllRanges();
+    newSelection.addRange(newRange);
+}
+
+// Function to highlight the bold button
+function updateBoldButtonHighlight() {
+    const boldButton = document.getElementById('boldButton');
+    console.log('Update Bold Button Highlight:', isBoldActive); // Debug log
+    if (isBoldActive) {
+        boldButton.classList.add('active');
+    } else {
+        boldButton.classList.remove('active');
+    }
+}
+
+// Handle Enter key behavior
+document.getElementById('transcription').addEventListener('keydown', function(event) {
+    if (event.key === 'Enter') {
+        setTimeout(() => {
+            const selection = window.getSelection();
+            const currentNode = selection.anchorNode;
+            let lineElement = currentNode;
+
+            while (lineElement && lineElement.nodeName !== 'DIV' && lineElement.nodeName !== 'P') {
+                lineElement = lineElement.parentNode;
+            }
+
+            if (lineElement) {
+                if (isBoldModeOn) {
+                    lineElement.innerHTML = lineElement.innerHTML.replace(/<\/?b>/g, '');
+                    isBoldActive = false;
+                    updateBoldButtonHighlight();
+                } else {
+                    lineElement.innerHTML = isBoldActive ? `<b>${lineElement.innerHTML}</b>` : lineElement.innerHTML;
+                }
+            }
+        }, 0);
+    }
+});
+    </script>
+
+
+
+  <script>
+document.getElementById('togglenightmode').addEventListener('change', function() {
+  const changeableElements = document.querySelectorAll('#wordCount, #lineCount, #transcription');
+  const body = document.body;
+
+  if (this.checked) {
+    changeableElements.forEach(element => element.classList.add('nightmode'));
+    body.classList.add('nightmode');
+  } else {
+    changeableElements.forEach(element => element.classList.remove('nightmode'));
+    body.classList.remove('nightmode');
+  }
+});
+  </script>
+</body>
+</html>
