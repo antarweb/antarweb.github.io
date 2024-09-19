@@ -143,6 +143,25 @@ font-size: 12px;
 margin-bottom: 10px; 
 }
 
+.guest-buttons {
+    display: block;
+    margin: 10px 0px;
+}
+.guest-buttons button {
+            font-size: 16px;
+            font-weight: bold;
+            padding: 10px;
+            margin: 5px;
+            background-color: #007BFF;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+}
+
+.guest-buttons button:hover {
+    background-color: #0056b3;
+}
 
     </style>
     <style>
@@ -258,6 +277,16 @@ margin-bottom: 10px;
 </div>
 
     <div id="fileNameDisplay"></div>
+
+<div class="guest-buttons">
+    <button onclick="addGuest('Guest 1')">Guest 1</button>
+    <button onclick="addGuest('Guest 2')">Guest 2</button>
+    <button onclick="addGuest('Guest 3')">Guest 3</button><br>
+    <button onclick="addGuest('Guest 4')">Guest 4</button>
+    <button id="moreButton" onclick="addMoreGuests()">+</button>
+
+</div>
+
     <button id="importButton" class="import">Import DOCX <i class="fa-solid fa-inbox-in"></i></button>
     <input type="file" id="importFile" accept=".txt,.doc,.docx" style="display: none;" />
 
@@ -276,6 +305,10 @@ margin-bottom: 10px;
         <button onclick="toggleLoop10Sec()">Loop Last 10s (Alt + L)</button><br>
 <button id="importButton">Import DOCX  (Ctrl + O)</button>
 <button id="downloadDocx">Export DOCX (Ctrl + S)</button><br>
+    <button onclick="addGuest('Guest 1')">Guest 1 (CTRL + NUM 1)</button>
+    <button onclick="addGuest('Guest 2')">Guest  2 (CTRL + NUM 2)</button><br>
+    <button onclick="addGuest('Guest 3')">Guest 3 (CTRL + NUM 3)</button>
+    <button onclick="addGuest('Guest 4')">Guest 4 (CTRL + NUM 4)</button><br>
         <button onclick="resetEverything()">Reset All (Ctrl + DELETE)</button>
     </div>
 
@@ -300,6 +333,7 @@ margin-bottom: 10px;
         let audioFileName = '';
         let isBoldModeOn = false;
         let isBoldActive = false;
+        let guestCount = 4;
         
         // Handle File Selection and Display Audio Name
         audioFileInput.addEventListener('change', function(event) {
@@ -405,68 +439,95 @@ margin-bottom: 10px;
             return `${mins}:${secs < 10 ? '0' : ''}${secs}`;
         }
         
-        // Keyboard Controls
-        document.addEventListener('keydown', function(event) {
-            if (event.ctrlKey && event.code === 'Space') {
-                event.preventDefault();
-                togglePlayPause();
-            }
-        
-            if (event.ctrlKey && event.code === 'ArrowUp') {
-                event.preventDefault();
-                increaseSpeed();
-            }
-        
-            if (event.ctrlKey && event.code === 'ArrowDown') {
-                event.preventDefault();
-                decreaseSpeed();
-            }
-        
-            if (event.ctrlKey && event.code === 'ArrowRight') {
-                event.preventDefault();
-                skipForward();
-            }
-        
-            if (event.ctrlKey && event.code === 'ArrowLeft') {
-                event.preventDefault();
-                skipBackward();
-            }
-        
-            if (event.ctrlKey && (event.key === 'l' || event.key === 'L')) {
-                event.preventDefault();
-                toggleLoop5Sec();
-            }
-        
-            if (event.altKey && (event.key === 'l' || event.key === 'L')) {
-                event.preventDefault();
-                toggleLoop10Sec();
-            }
-        
-            if (event.ctrlKey && event.code === 'KeyB') {
-                event.preventDefault();
-                boldCurrentLine();
-            }
-        
-            if (event.altKey && event.code === 'KeyT') {
-                event.preventDefault();
-                addTimestamp();
-            }
-        
-            if (event.ctrlKey && event.code === 'Delete') {
-                event.preventDefault();
-                resetEverything();
-            }
-
-if (event.ctrlKey && event.code === 'KeyO') {
+// Keyboard Controls
+document.addEventListener('keydown', function(event) {
+    if (event.ctrlKey && event.code === 'Space') {
         event.preventDefault();
-document.getElementById('importFile').click();
+        togglePlayPause();
     }
 
-if (event.ctrlKey && event.code === 'KeyS') {
+    if (event.ctrlKey && event.code === 'ArrowUp') {
         event.preventDefault();
-document.getElementById('downloadDocx').click(); 
+        increaseSpeed();
     }
-        });
+
+    if (event.ctrlKey && event.code === 'ArrowDown') {
+        event.preventDefault();
+        decreaseSpeed();
+    }
+
+    if (event.ctrlKey && event.code === 'ArrowRight') {
+        event.preventDefault();
+        skipForward();
+    }
+
+    if (event.ctrlKey && event.code === 'ArrowLeft') {
+        event.preventDefault();
+        skipBackward();
+    }
+
+    if (event.ctrlKey && (event.key === 'l' || event.key === 'L')) {
+        event.preventDefault();
+        toggleLoop5Sec();
+    }
+
+    if (event.altKey && (event.key === 'l' || event.key === 'L')) {
+        event.preventDefault();
+        toggleLoop10Sec();
+    }
+
+    if (event.ctrlKey && event.code === 'KeyB') {
+        event.preventDefault();
+        boldCurrentLine();
+    }
+
+    if (event.altKey && event.code === 'KeyT') {
+        event.preventDefault();
+        addTimestamp();
+    }
+
+    if (event.ctrlKey && event.code === 'Delete') {
+        event.preventDefault();
+        resetEverything();
+    }
+
+    if (event.ctrlKey && event.code === 'KeyO') {
+        event.preventDefault();
+        document.getElementById('importFile').click();
+    }
+
+    if (event.ctrlKey && event.code === 'KeyS') {
+        event.preventDefault();
+        document.getElementById('downloadDocx').click();
+    }
+
+    // Guest shortcuts (Ctrl + Number)
+    if (event.ctrlKey) {
+        switch (event.key) {
+            case '1':
+                addGuest('Guest 1');
+                break;
+            case '2':
+                addGuest('Guest 2');
+                break;
+            case '3':
+                addGuest('Guest 3');
+                break;
+            case '4':
+                addGuest('Guest 4');
+                break;
+            default:
+                if (event.key >= '5' && event.key <= '9') {
+                    const guestNumber = event.key;
+                    addGuest(`Guest ${guestNumber}`);
+                }
+                break;
+        }
+    }
+});
+
+
+
         function keepKeyboardOpen() {
                 var transcriptionArea = document.getElementById("transcription");
                 transcriptionArea.focus(); // Focus the contenteditable div
@@ -964,6 +1025,52 @@ document.getElementById('transcription').addEventListener('keydown', function(ev
         }, 0);
     }
 });
+
+
+
+function addGuest(guestName) {
+    const transcriptionArea = document.getElementById('transcription');
+    
+    // Create a <b> element for the guest name
+    const guestBold = document.createElement("b");
+    guestBold.textContent = guestName + ": ";
+
+    // Append the guest name at the current caret position
+    const selection = window.getSelection();
+    const range = selection.getRangeAt(0);
+    range.deleteContents();
+    range.insertNode(guestBold);
+
+    // Move the caret after the inserted text
+    const spaceNode = document.createTextNode('\u00A0');  // Add a space after the guest name
+    range.setStartAfter(guestBold);
+    range.insertNode(spaceNode);
+    range.setStartAfter(spaceNode);
+    range.setEndAfter(spaceNode);
+    selection.removeAllRanges();
+    selection.addRange(range);
+
+    // Save the updated transcription content to localStorage
+    localStorage.setItem('transcriptionData', transcriptionArea.innerHTML);
+}
+
+function addMoreGuests() {
+    // Increment guest count for the next guest button
+    guestCount++;
+
+    // Create a new button for the next guest
+    const newGuestButton = document.createElement('button');
+    newGuestButton.textContent = `Guest ${guestCount}`;
+    newGuestButton.onclick = function() {
+        addGuest(`Guest ${guestCount}`);
+    };
+
+    // Add the new button before the "More" button
+    const moreButton = document.getElementById('moreButton');
+    moreButton.parentNode.insertBefore(newGuestButton, moreButton);
+}
+
+
     </script>
 
 
