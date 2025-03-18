@@ -1,9 +1,11 @@
 const CACHE_NAME = "hisaberkhata-cache-v1";
 const urlsToCache = [
-    "/hisaberkhata",
-    "/index.html",
-    "/icon-192x192.png",
-    "/icon-512x512.png"
+    "/hisaberkhata/",
+    "/hisaberkhata/index.html",
+    "/hisaberkhata/style.css",
+    "/hisaberkhata/script.js",
+    "/hisaberkhata/icon-192x192.png",
+    "/hisaberkhata/icon-512x512.png"
 ];
 
 // Install Service Worker and Cache Files
