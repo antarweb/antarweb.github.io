@@ -5,7 +5,7 @@
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.1.1/css/all.min.css">
 <link rel="stylesheet" href="https://antarweb.github.io/files/header-footer.css">
 <style> body{font-family:Arial,sans-serif;margin:0;padding:0;background-color:#f4f4f4}.container{width:80%;margin:0 auto;padding:20px;background-color:#fff;box-shadow:0 0 10px rgba(0,0,0,0.1)}h3,h2{text-align:center}.header,.entry-form,.summary,.history{margin-bottom:20px}.header h1{text-align:center;color:#4CAF50}.date{text-align:right;font-size:18px;color:#555}.entry-form input{margin:2px 0 14px;padding:10px;box-sizing:border-box}.entry-form input{width:100%}.entry-form label{font-weight:bold}.entry-form button{width:100%;padding:10px;margin:5px 0;border:1px solid #ccc;border-radius:5px}.add-button{background-color:#28a745;color:white;border:none}.add-button:hover{background-color:#218838}.reset-button{background-color:#dc3545;color:white;border:none}.reset-button:hover{background-color:#c82333}.download-button{background-color:#2196F3;color:white;border:none}.history table,.month-table table{width:100%;border-collapse:collapse}.history table,.month-table table,.history td,.month-table td{border-bottom:1px dashed black}.history th,.history td,.month-table th,.month-table td{padding:10px;text-align:left}.history th,.month-table th{color:white;background-color:#D19E03}.history tr:hover,.month-table tr:hover{background-color:#f1f1f1;cursor:pointer}.balance{font-size:24px;font-weight:bold;text-align:center;color:#4CAF50}.modal{display:none;position:fixed;z-index:1;left:0;top:0;width:100%;height:100%;overflow:auto;background-color:rgb(0,0,0);background-color:rgba(0,0,0,0.4);padding-top:60px}.modal-content{background-color:#fefefe;margin:5% auto;padding:20px;border:1px solid #888;border-radius:10px;width:80%;max-width:400px}.modal-close{color:red;float:right;font-size:28px;font-weight:bold}.modal-close:hover,.modal-close:focus{color:black;text-decoration:none;cursor:pointer}.month-selector{width:100%;padding:10px;margin:10px 0;border-radius:5px}.scroll-wrapper{width:100%;overflow:hidden;white-space:nowrap;position:relative;border-top:1px solid black;border-bottom:1px solid black;padding:8px 0}.scroll-text{display:inline-block;animation:scrollLeft 12s linear infinite;white-space:nowrap}@keyframes scrollLeft{from{transform:translateX(100%)}to{transform:translateX(-100%)}}</style>
-<link rel="manifest" href="/hisaberkhata/manifest.json">
+<link rel="manifest" href="/manifest.json">
   
 </head><body>
 <header>
@@ -25,9 +25,13 @@
 
 <script>
   if ('serviceWorker' in navigator) {
-    navigator.serviceWorker.register('/hisaberkhata/service-worker.js')
-    .then(reg => console.log("Service Worker registered", reg))
-    .catch(err => console.log("Service Worker registration failed", err));
+    window.addEventListener('load', () => {
+      navigator.serviceWorker.register('/service-worker.js').then((registration) => {
+        console.log('Service Worker registered with scope:', registration.scope);
+      }).catch((error) => {
+        console.error('Service Worker registration failed:', error);
+      });
+    });
   }
 </script>
 
