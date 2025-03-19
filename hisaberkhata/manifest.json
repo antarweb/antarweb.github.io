@@ -1,11 +1,10 @@
 {
-  "name": "Hisaberkhata",
+  "name": "HisaberKhata",
   "short_name": "Hisaberkhata",
-  "description": "A personal finance tracker.",
-  "start_url": "./index.html",
+  "start_url": "index.html",
   "display": "standalone",
   "background_color": "#ffffff",
-  "theme_color": "#4CAF50",
+  "theme_color": "#4A90E2",
   "icons": [
     {
       "src": "icon-192x192.png",
