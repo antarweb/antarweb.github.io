@@ -1,0 +1,16 @@
+{
+    "name": "YouTube Fullscreen",
+    "short_name": "YouTube",
+    "description": "Open YouTube in fullscreen mode.",
+    "start_url": "https://m.youtube.com",
+    "display": "fullscreen",
+    "background_color": "#000000",
+    "theme_color": "#FF0000",
+    "icons": [
+        {
+            "src": "https://upload.wikimedia.org/wikipedia/commons/4/42/YouTube_icon_%282013-2017%29.png",
+            "sizes": "192x192",
+            "type": "image/png"
+        }
+    ]
+}
