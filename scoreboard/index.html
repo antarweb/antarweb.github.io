@@ -1,0 +1,675 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Gully Cricket Live Scorecard</title>
+  <style>
+    body { font-family: Arial, sans-serif; background: #f5f8fc; margin: 0; padding: 20px;}
+    h1 { text-align: center; color: #1b5e20; margin-bottom: 15px; }
+    .scorecard { max-width: 1000px; margin: 0 auto; background: #fff; border-radius: 6px; padding: 20px; box-shadow: 0px 2px 10px rgba(0,0,0,0.12);}
+    h2 { margin-top: 25px; margin-bottom: 10px; border-bottom: 2px solid #ddd; padding-bottom: 4px; color: #1565c0; }
+    .summary { background: #e3f2fd; padding: 10px; border-radius: 4px; margin-bottom: 15px; font-size: 18px; font-weight: bold;}
+    table { width: 100%; border-collapse: collapse; margin-bottom: 15px;}
+    th, td { border: 1px solid #ccc; padding: 6px 8px; text-align: left; }
+    th { background: #1976d2; color: white; text-align: center; }
+    .controls button { display: inline-block; padding: 8px 12px; margin: 4px; border: none; border-radius: 4px; cursor: pointer; color: white; background: #1976d2;}
+    .controls button:hover { background: #0d47a1;}
+    .danger { background:#c62828; }
+    .orange { background:#f57c00; }
+    .purple { background:#6a1b9a; }
+    input, select { padding: 6px; margin: 3px;}
+    #bowlerChangeBox, #newBatterBox, #wicketBox, #catchBox { display:none; background:#ffe082; padding:10px; margin:10px 0; border-radius:5px;}
+    #ballByBall { background:#f0f4c3; padding:10px; border-radius:5px; white-space:pre-line; min-height:40px;}
+    .edit-icon { cursor:pointer; color:#1565c0; margin-left:6px; }
+    #targetBox { background:#c8e6c9; padding:10px; border-radius:5px; margin-bottom:10px; }
+    .controls .small { padding:6px 8px; font-size:14px; }
+    .actions-row { display:flex; gap:8px; align-items:center; flex-wrap:wrap; margin-top:10px; }
+button {display: inline-block; background: green;border: none; border-radius: 2px;
+  color: white;
+  padding: 10px 10px;
+  text-align: center;
+  text-decoration: none;}
+input{border: 2px solid black; padding: 8px}
+
+  </style>
+</head>
+<body>
+  <h1>Cricket Live Scorecard by Antar</h1>
+
+  <div id="targetBox">
+    <label><input type="checkbox" id="chasingTarget" onchange="toggleTarget()"> Chasing Target</label>
+    <div id="targetInputs" style="display:none; margin-top:8px;">
+      Target Runs: <input type="number" id="targetRuns" style="width:70px" min="0">
+      Overs: <input type="number" id="targetOvers" style="width:50px" min="0">
+      <button onclick="setTarget()" class="small">Set</button>
+    </div>
+    <div id="targetInfo" style="margin-top:8px; font-weight:bold; color:#1b5e20;"></div>
+  </div>
+
+  <div class="scorecard">
+    <div class="summary">
+      Score: <span id="runs">0</span>/<span id="wickets">0</span> &nbsp;
+      Overs: <span id="overs">0.0</span>
+    </div>
+
+    <h2>Live Scoring Controls</h2>
+    <div>
+      Striker: <select id="striker" onchange="setStriker(this.value)"></select><br>
+      Non-Striker: <select id="nonStriker" onchange="setNonStriker(this.value)"></select><br>
+      Bowler: <select id="currentBowler" onchange="setBowler(this.value)"></select>
+    </div>
+
+    <div class="controls actions-row">
+      <div class="row-runs">
+        <button onclick="addRun(0)" class="small">Dot</button>
+        <button onclick="addRun(1)" class="small">+1</button>
+        <button onclick="addRun(2)" class="small">+2</button>
+        <button onclick="addRun(3)" class="small">+3</button>
+        <button onclick="addRun(4)" class="small">+4</button>
+        <button onclick="addRun(6)" class="small">+6</button>
+      </div>
+      <div>
+        <button onclick="preWicket()" class="small danger">Wicket</button>
+        <button onclick="addExtra('wide')" class="small orange">Wide</button>
+        <button onclick="addExtra('noball')" class="small purple">No Ball</button>
+      </div>
+      <div style="margin-left:auto">
+        <button onclick="saveState()" class="small">Save Now</button>
+        <button onclick="loadState()" class="small">Load Saved</button>
+        <button onclick="resetMatch()" class="small danger">Reset Match</button>
+      </div>
+    </div>
+
+    <div id="bowlerChangeBox">
+      <b>Over completed! Choose new bowler:</b><br>
+      <select id="newBowler"></select>
+      <button onclick="changeBowler()" class="small">Confirm</button>
+    </div>
+
+    <div id="wicketBox">
+      <b>How was the wicket?</b><br>
+      <select id="wicketType">
+        <option value="bowled">Bowled</option>
+        <option value="caught">Caught</option>
+        <option value="run out">Run Out</option>
+        <option value="lbw">LBW</option>
+        <option value="stumped">Stumped</option>
+      </select>
+      <button onclick="confirmWicket()" class="small">Next</button>
+    </div>
+
+    <div id="catchBox">
+      <b>Who took the catch?</b><br>
+      <input type="text" id="catcherName">
+      <button onclick="catchConfirm()" class="small">Confirm Catcher</button>
+    </div>
+
+    <div id="newBatterBox">
+      <b>Enter new batter:</b><br>
+      <input type="text" id="newBatterName">
+      <button onclick="addNewBatterAfterWicket()" class="small">Add Batter</button>
+    </div>
+
+    <h2>Batting</h2>
+    <table id="batting">
+      <thead>
+        <tr>
+          <th>Batter</th><th>R</th><th>B</th><th>4s</th><th>6s</th><th>SR</th><th>Dismissal</th>
+        </tr>
+      </thead>
+      <tbody></tbody>
+    </table>
+    <div>
+      <input type="text" id="batterName" placeholder="Player name">
+      <button onclick="addBatter()" class="small">Add Batter</button>
+    </div>
+
+    <h2>Bowling</h2>
+    <table id="bowling">
+      <thead>
+        <tr><th>Bowler</th><th>O</th><th>R</th><th>W</th><th>Econ</th></tr>
+      </thead>
+      <tbody></tbody>
+    </table>
+    <div>
+      <input type="text" id="bowlerName" placeholder="Bowler name">
+      <button onclick="addBowler()" class="small">Add Bowler</button>
+    </div>
+
+    <h2>Fall of Wickets</h2>
+    <ul id="fow"></ul>
+
+    <h2>Ball by Ball</h2>
+    <div id="ballByBall"></div>
+  </div>
+
+  <script>
+    // --- state ---
+    let runs = 0;
+    let wickets = 0;
+    let balls = 0; // legal deliveries only
+    let batters = [];
+    let bowlers = [];
+    let strikerIdx = null;
+    let nonStrikerIdx = null;
+    let bowlerIdx = null;
+    let pendingWicketType = "";
+    let pendingCatcher = "";
+    let oversLog = [[]]; // array of overs, each over is array of strings for deliveries
+
+    // target mode
+    let targetActive = false;
+    let targetRuns = 0;
+    let targetOvers = 0;
+
+    // --- utility helpers ---
+    function toNumber(x, fallback = null) {
+      if (x === null || x === undefined) return fallback;
+      const n = Number(x);
+      return Number.isNaN(n) ? fallback : n;
+    }
+
+    // --- localStorage ---
+    function saveState() {
+      try {
+        const state = {
+          runs, wickets, balls,
+          batters, bowlers,
+          strikerIdx: strikerIdx === null ? null : Number(strikerIdx),
+          nonStrikerIdx: nonStrikerIdx === null ? null : Number(nonStrikerIdx),
+          bowlerIdx: bowlerIdx === null ? null : Number(bowlerIdx),
+          oversLog,
+          pendingWicketType: pendingWicketType || "",
+          pendingCatcher: pendingCatcher || "",
+          targetActive: !!targetActive,
+          targetRuns: Number(targetRuns) || 0,
+          targetOvers: Number(targetOvers) || 0,
+          fowHtml: document.getElementById("fow").innerHTML || ""
+        };
+        localStorage.setItem("gullyCricketState", JSON.stringify(state));
+      } catch (e) {
+        console.error("Save failed", e);
+      }
+    }
+
+    function loadState() {
+      try {
+        const raw = localStorage.getItem("gullyCricketState");
+        if (!raw) {
+          // nothing saved
+          renderBatting(); renderBowling(); renderDropdowns(); updateSummary();
+          return;
+        }
+        const state = JSON.parse(raw);
+        runs = toNumber(state.runs, 0);
+        wickets = toNumber(state.wickets, 0);
+        balls = toNumber(state.balls, 0);
+        batters = Array.isArray(state.batters) ? state.batters : [];
+        bowlers = Array.isArray(state.bowlers) ? state.bowlers : [];
+        strikerIdx = state.strikerIdx === null ? null : toNumber(state.strikerIdx, null);
+        nonStrikerIdx = state.nonStrikerIdx === null ? null : toNumber(state.nonStrikerIdx, null);
+        bowlerIdx = state.bowlerIdx === null ? null : toNumber(state.bowlerIdx, null);
+        oversLog = Array.isArray(state.oversLog) && state.oversLog.length > 0 ? state.oversLog : [[]];
+        pendingWicketType = state.pendingWicketType || "";
+        pendingCatcher = state.pendingCatcher || "";
+        targetActive = !!state.targetActive;
+        targetRuns = toNumber(state.targetRuns, 0);
+        targetOvers = toNumber(state.targetOvers, 0);
+
+        // restore FOw HTML if saved
+        if (state.fowHtml) {
+          document.getElementById("fow").innerHTML = state.fowHtml;
+        } else {
+          document.getElementById("fow").innerHTML = "";
+        }
+
+        // reflect checkbox & inputs
+        document.getElementById("chasingTarget").checked = !!targetActive;
+        document.getElementById("targetInputs").style.display = targetActive ? "block" : "none";
+        document.getElementById("targetRuns").value = targetRuns || "";
+        document.getElementById("targetOvers").value = targetOvers || "";
+
+        renderBatting(); renderBowling(); renderDropdowns(); updateSummary();
+      } catch (e) {
+        console.error("Load failed", e);
+      }
+    }
+
+    // --- rendering ---
+function renderBatting() {
+  const tbody = document.querySelector("#batting tbody");
+  tbody.innerHTML = "";
+  batters.forEach((p, i) => {
+    const icon = (i === strikerIdx) ? "鈿旓笍 " : ((i === nonStrikerIdx) ? "馃洝锔� " : "");
+    const sr = p.b > 0 ? ((p.r / p.b) * 100).toFixed(2) : "0.00";
+    const safeName = p.name || "";
+    
+    // highlight striker / non-striker
+    let rowClass = "";
+    if (i === strikerIdx) rowClass = " style='background-color:#d4edda;font-weight:bold;'";   // green
+    else if (i === nonStrikerIdx) rowClass = " style='background-color:#fff3cd;font-weight:bold;'"; // yellow
+
+    tbody.innerHTML += `<tr${rowClass}>
+      <td>${icon}${escapeHtml(safeName)} <span class="edit-icon" onclick="editName(${i}, 'batter')">鉁忥笍</span></td>
+      <td>${p.r}</td><td>${p.b}</td><td>${p.f}</td><td>${p.s}</td>
+      <td>${sr}</td><td>${escapeHtml(p.out || '')}</td>
+    </tr>`;
+  });
+}
+
+function renderBowling() {
+  const tbody = document.querySelector("#bowling tbody");
+  tbody.innerHTML = "";
+  bowlers.forEach((p, i) => {
+    const overs = Math.floor((p.balls || 0) / 6) + "." + ((p.balls || 0) % 6);
+    const econ = (p.balls && p.balls > 0) ? (p.r / (p.balls / 6)).toFixed(2) : "0.00";
+    const icon = (i === bowlerIdx) ? "馃幆 " : "";
+    
+    // highlight current bowler
+    let rowClass = "";
+    if (i === bowlerIdx) rowClass = " style='background-color:#cce5ff;font-weight:bold;'"; // blue
+
+    tbody.innerHTML += `<tr${rowClass}>
+      <td>${icon}${escapeHtml(p.name || "")} <span class="edit-icon" onclick="editName(${i}, 'bowler')">鉁忥笍</span></td>
+      <td>${overs}</td><td>${p.r}</td><td>${p.w}</td><td>${econ}</td>
+    </tr>`;
+  });
+}
+
+    function renderDropdowns() {
+      const strikerSel = document.getElementById("striker");
+      const nonSel = document.getElementById("nonStriker");
+      const bowlerSel = document.getElementById("currentBowler");
+
+      strikerSel.innerHTML = '';
+      nonSel.innerHTML = '';
+      bowlerSel.innerHTML = '';
+
+      batters.forEach((p, i) => {
+        const sel = document.createElement("option");
+        sel.value = i;
+        sel.textContent = p.name || ("Batter " + (i + 1));
+        if (i === strikerIdx) sel.selected = true;
+        strikerSel.appendChild(sel);
+
+        const sel2 = document.createElement("option");
+        sel2.value = i;
+        sel2.textContent = p.name || ("Batter " + (i + 1));
+        if (i === nonStrikerIdx) sel2.selected = true;
+        nonSel.appendChild(sel2);
+      });
+
+      bowlers.forEach((p, i) => {
+        const opt = document.createElement("option");
+        opt.value = i;
+        opt.textContent = p.name || ("Bowler " + (i + 1));
+        if (i === bowlerIdx) opt.selected = true;
+        bowlerSel.appendChild(opt);
+      });
+
+      // If selects are empty, add a placeholder option
+      if (!strikerSel.childElementCount) {
+        strikerSel.innerHTML = `<option value="">-- add batters --</option>`;
+      }
+      if (!nonSel.childElementCount) {
+        nonSel.innerHTML = `<option value="">-- add batters --</option>`;
+      }
+      if (!bowlerSel.childElementCount) {
+        bowlerSel.innerHTML = `<option value="">-- add bowlers --</option>`;
+      }
+    }
+
+    function updateBallByBallDisplay() {
+      let text = "";
+      oversLog.forEach((over, i) => {
+        if (Array.isArray(over) && over.length > 0) {
+          text += `Over ${i + 1}: ${over.join(", ")}\n`;
+        }
+      });
+      document.getElementById("ballByBall").textContent = text.trim();
+    }
+
+    function updateSummary() {
+      document.getElementById('runs').textContent = runs;
+      document.getElementById('wickets').textContent = wickets;
+      document.getElementById('overs').textContent = Math.floor(balls / 6) + "." + (balls % 6);
+      updateBallByBallDisplay();
+      updateTargetInfo();
+      saveState(); // persist after summary update
+    }
+
+    // --- actions ---
+    function addBatter() {
+      const name = document.getElementById("batterName").value.trim();
+      if (!name) return alert("Enter batter name");
+      batters.push({ name, r: 0, b: 0, f: 0, s: 0, out: "Not Out" });
+      document.getElementById("batterName").value = "";
+      if (batters.length === 1) strikerIdx = 0;
+      else if (batters.length === 2 && nonStrikerIdx === null) nonStrikerIdx = 1;
+      renderBatting(); renderDropdowns(); saveState();
+    }
+
+    function addBowler() {
+      const name = document.getElementById("bowlerName").value.trim();
+      if (!name) return alert("Enter bowler name");
+      bowlers.push({ name, balls: 0, r: 0, w: 0 });
+      document.getElementById("bowlerName").value = "";
+      if (bowlers.length === 1) bowlerIdx = 0;
+      renderBowling(); renderDropdowns(); saveState();
+    }
+
+    function setStriker(val) {
+      const v = toNumber(val, null);
+      strikerIdx = v === null ? null : v;
+      renderBatting(); renderDropdowns(); saveState();
+    }
+
+    function setNonStriker(val) {
+      const v = toNumber(val, null);
+      nonStrikerIdx = v === null ? null : v;
+      renderBatting(); renderDropdowns(); saveState();
+    }
+
+    function setBowler(val) {
+      const v = toNumber(val, null);
+      bowlerIdx = v === null ? null : v;
+      renderBowling(); renderDropdowns(); saveState();
+    }
+
+    function swapStrikers(save = true) {
+      [strikerIdx, nonStrikerIdx] = [nonStrikerIdx, strikerIdx];
+      renderBatting();
+      renderDropdowns();
+      if (save) saveState();
+    }
+
+    function addRun(r) {
+      // require two batters and a bowler
+      if (strikerIdx === null || nonStrikerIdx === null || bowlerIdx === null) {
+        return alert("Add 2 batters and 1 bowler before scoring.");
+      }
+
+      const striker = batters[strikerIdx];
+      const bowler = bowlers[bowlerIdx];
+      if (!striker || !bowler) return alert("Invalid striker or bowler.");
+
+      // legal delivery
+      runs += Number(r);
+      balls += 1;
+      // batsman stats
+      striker.r += Number(r);
+      striker.b += 1;
+      if (Number(r) === 4) striker.f += 1;
+      if (Number(r) === 6) striker.s += 1;
+
+      // bowler stats
+      bowler.r += Number(r);
+      bowler.balls = (bowler.balls || 0) + 1;
+
+      // ball log
+      oversLog[oversLog.length - 1].push(Number(r) === 0 ? "鈥�" : String(r));
+
+      // swap on odd runs
+      if (Number(r) % 2 === 1) swapStrikers(false);
+
+      // end of over check
+      if (balls % 6 === 0) {
+        // swap for end of over, then handle endOver UI
+        swapStrikers(false);
+        endOver();
+      }
+
+      renderBatting(); renderBowling(); updateSummary();
+    }
+
+    function addExtra(type) {
+      if (bowlerIdx === null) return alert("Add a bowler first!");
+      const bowler = bowlers[bowlerIdx];
+      if (!bowler) return alert("Invalid bowler.");
+
+      if (type === "wide") {
+        // wide: +1 (or more if user wants to add), not a legal delivery
+        let extra = prompt("Wide runs (enter extra wides beyond the one penalty). For a standard wide just press OK or enter 0.", "0");
+        extra = parseInt(extra || "0", 10);
+        if (isNaN(extra)) extra = 0;
+        const totalWide = 1 + (extra || 0);
+        runs += totalWide;
+        bowler.r += totalWide; // wides are charged to bowler's conceded runs
+        // do not increment balls or batsman balls
+        oversLog[oversLog.length - 1].push(totalWide === 1 ? "WD" : `WD+${extra}`);
+      } else if (type === "noball") {
+        // no-ball: +1 penalty (counts against bowler), not a legal delivery.
+        // batsman runs off the bat may be added (but do not count as faced-ball)
+        let extraRuns = prompt("Runs scored off the bat on the no-ball (enter 0 if none).", "0");
+        extraRuns = parseInt(extraRuns || "0", 10);
+        if (isNaN(extraRuns)) extraRuns = 0;
+        // +1 no-ball penalty
+        runs += 1;
+        bowler.r += 1;
+        if (extraRuns > 0) {
+          // add to batsman total (but do not increment balls faced)
+          if (strikerIdx !== null) {
+            const striker = batters[strikerIdx];
+            striker.r += extraRuns;
+            if (extraRuns === 4) striker.f += 1;
+            if (extraRuns === 6) striker.s += 1;
+          }
+          runs += extraRuns;
+          bowler.r += extraRuns;
+          oversLog[oversLog.length - 1].push(`NB+${extraRuns}`);
+        } else {
+          oversLog[oversLog.length - 1].push("NB");
+        }
+      }
+      renderBatting(); renderBowling(); updateSummary();
+    }
+
+    function preWicket() {
+      if (strikerIdx === null || bowlerIdx === null) {
+        return alert("Need a striker and a bowler to record a wicket.");
+      }
+      document.getElementById("wicketBox").style.display = "block";
+    }
+
+    function confirmWicket() {
+      pendingWicketType = document.getElementById("wicketType").value;
+      document.getElementById("wicketBox").style.display = "none";
+      if (pendingWicketType === "caught") {
+        document.getElementById("catchBox").style.display = "block";
+      } else {
+        wicket();
+      }
+    }
+
+    function catchConfirm() {
+      pendingCatcher = document.getElementById("catcherName").value.trim();
+      document.getElementById("catchBox").style.display = "none";
+      wicket();
+    }
+
+    function wicket() {
+      if (strikerIdx === null || bowlerIdx === null) return alert("Invalid wicket state.");
+
+      const striker = batters[strikerIdx];
+      const bowler = bowlers[bowlerIdx];
+
+      // legal delivery -> counts as ball
+      balls += 1;
+      bowler.balls = (bowler.balls || 0) + 1;
+
+      // increment batsman ball count for wicket ball
+      striker.b += 1;
+
+      wickets += 1;
+      bowler.w = (bowler.w || 0) + 1;
+
+      // set dismissal text
+      if (pendingWicketType === "caught") {
+        striker.out = `c ${pendingCatcher || "unknown"} b ${bowler.name}`;
+        oversLog[oversLog.length - 1].push("W(c)");
+      } else {
+        striker.out = `${pendingWicketType} b ${bowler.name}`;
+        oversLog[oversLog.length - 1].push("W");
+      }
+
+      // add to fall of wickets
+      const fo = `${runs}/${wickets} (${Math.floor(balls / 6)}.${balls % 6}) - ${striker.name}`;
+      const fowUl = document.getElementById("fow");
+      const li = document.createElement("li");
+      li.textContent = fo;
+      fowUl.appendChild(li);
+
+      // show new batter input
+      document.getElementById("newBatterBox").style.display = "block";
+
+      // Over end check: if legal ball ended an over, perform end-of-over flow
+      if (balls % 6 === 0) {
+        swapStrikers(false); // swap because end of over (we use false to avoid double save)
+        endOver();
+      }
+
+      // reset pending info
+      pendingWicketType = "";
+      pendingCatcher = "";
+
+      renderBatting(); renderBowling(); updateSummary();
+    }
+
+    function addNewBatterAfterWicket() {
+      const name = document.getElementById("newBatterName").value.trim();
+      if (!name) return alert("Enter batter name");
+      batters.push({ name, r: 0, b: 0, f: 0, s: 0, out: "Not Out" });
+      // new batter takes the striker's end by default after wicket
+      strikerIdx = batters.length - 1;
+      // If non-striker was null (game start), set it
+      if (nonStrikerIdx === null && batters.length >= 2) {
+        nonStrikerIdx = (strikerIdx === 0 ? 1 : 0);
+      }
+      document.getElementById("newBatterName").value = "";
+      document.getElementById("newBatterBox").style.display = "none";
+      renderBatting(); renderDropdowns(); saveState();
+    }
+
+    function endOver() {
+      // push a new empty over
+      oversLog.push([]);
+      // show change-bowler UI
+      document.getElementById('bowlerChangeBox').style.display = "block";
+      const newBowlerSel = document.getElementById('newBowler');
+      newBowlerSel.innerHTML = '';
+      bowlers.forEach((p, i) => {
+        const opt = document.createElement("option");
+        opt.value = i;
+        opt.textContent = p.name || ("Bowler " + (i + 1));
+        newBowlerSel.appendChild(opt);
+      });
+      updateSummary();
+      saveState();
+    }
+
+    function changeBowler() {
+      const raw = document.getElementById("newBowler").value;
+      const v = toNumber(raw, null);
+      bowlerIdx = v === null ? null : v;
+      // update the main selector to match
+      document.getElementById("currentBowler").value = (bowlerIdx === null) ? "" : String(bowlerIdx);
+      document.getElementById('bowlerChangeBox').style.display = "none";
+      renderBowling(); renderDropdowns(); saveState();
+    }
+
+    function editName(index, type) {
+      const newName = prompt("Enter new name:", (type === "batter" ? (batters[index] && batters[index].name) : (bowlers[index] && bowlers[index].name)) || "");
+      if (!newName) return;
+      if (type === "batter") {
+        if (!batters[index]) return;
+        batters[index].name = newName;
+        renderBatting(); renderDropdowns(); saveState();
+      } else {
+        if (!bowlers[index]) return;
+        bowlers[index].name = newName;
+        renderBowling(); renderDropdowns(); saveState();
+      }
+    }
+
+    // --- target mode functions ---
+    function toggleTarget() {
+      const checked = document.getElementById("chasingTarget").checked;
+      document.getElementById("targetInputs").style.display = checked ? "block" : "none";
+      if (!checked) {
+        targetActive = false;
+        document.getElementById("targetInfo").innerHTML = "";
+      } else {
+        targetActive = true;
+      }
+      saveState();
+    }
+
+    function setTarget() {
+      targetRuns = toNumber(document.getElementById("targetRuns").value, 0) || 0;
+      targetOvers = toNumber(document.getElementById("targetOvers").value, 0) || 0;
+      targetActive = true;
+      updateSummary();
+    }
+
+    function updateTargetInfo() {
+      if (!targetActive) return;
+      const totalBalls = targetOvers * 6;
+      const remainingBalls = Math.max(totalBalls - balls, 0);
+      const runsNeeded = targetRuns - runs;
+      if (runsNeeded <= 0) {
+        document.getElementById("targetInfo").innerHTML = `馃弳 Target Achieved!`;
+        return;
+      }
+      if (remainingBalls <= 0) {
+        document.getElementById("targetInfo").innerHTML = `鈴� Overs finished! Runs short by ${runsNeeded}`;
+        return;
+      }
+      const rrr = (runsNeeded / (remainingBalls / 6)).toFixed(2);
+      document.getElementById("targetInfo").innerHTML =
+        `馃幆 Target: ${targetRuns} in ${targetOvers} overs<br>
+         鉃★笍 Runs Needed: ${runsNeeded} from ${remainingBalls} balls<br>
+         馃搳 Required RR: ${rrr}`;
+    }
+
+    // --- reset ---
+    function resetMatch() {
+      if (!confirm("Reset match? This will clear current match and saved data.")) return;
+      runs = 0; wickets = 0; balls = 0;
+      batters = []; bowlers = [];
+      strikerIdx = null; nonStrikerIdx = null; bowlerIdx = null;
+      pendingWicketType = ""; pendingCatcher = "";
+      oversLog = [[]];
+      targetActive = false; targetRuns = 0; targetOvers = 0;
+      document.getElementById("chasingTarget").checked = false;
+      document.getElementById("targetInputs").style.display = "none";
+      document.getElementById("targetRuns").value = "";
+      document.getElementById("targetOvers").value = "";
+      document.getElementById("fow").innerHTML = "";
+      document.getElementById("ballByBall").textContent = "";
+      document.getElementById('bowlerChangeBox').style.display = "none";
+      document.getElementById('wicketBox').style.display = "none";
+      document.getElementById('catchBox').style.display = "none";
+      document.getElementById('newBatterBox').style.display = "none";
+      localStorage.removeItem("gullyCricketState");
+      renderBatting(); renderBowling(); renderDropdowns(); updateSummary();
+    }
+
+    // small helper to escape html when injecting names
+    function escapeHtml(unsafe) {
+      if (!unsafe) return "";
+      return String(unsafe)
+        .replace(/&/g, "&")
+        .replace(/</g, "<")
+        .replace(/>/g, ">")
+        .replace(/"/g, "&quot;")
+        .replace(/'/g, "&#039;");
+    }
+
+    // load state on start
+    window.addEventListener("load", function () {
+      loadState();
+    });
+  </script>
+</body>
+</html>
