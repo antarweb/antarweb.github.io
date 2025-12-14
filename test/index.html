@@ -1,0 +1,1134 @@
+<!doctype html>
+<html lang="bn">
+
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Online Test - Antar Saha</title>
+  <style>
+    :root {
+      --circle-size: 38px;
+      --gap: 14px;
+      --accent: #222
+    }
+
+    body {
+      font-family: system-ui, -apple-system, Segoe UI, Roboto, 'Noto Sans Bengali', Arial;
+      padding: 10px;
+      margin: 0;
+      background: #f7f7f8;
+      color: #111
+    }
+
+    .container {
+      max-width: 1200px;
+      margin: 0 auto;
+      background: #fff;
+      padding: 18px;
+      border-radius: 10px;
+      box-shadow: 0 6px 20px rgba(10, 10, 20, 0.06)
+    }
+
+    h1 {
+      font-size: 18px;
+      margin: 0 0 14px;
+    }
+
+    .heading {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: bold;
+      font-size: 3rem;
+    }
+    .controls {
+      display: flex;
+      gap: 8px;
+      align-items: center;
+      justify-content: center;
+      margin-bottom: 12px
+    }
+
+    button {
+      padding: 8px 12px;
+      border-radius: 8px;
+      border: 1px solid #ddd;
+      background: #fafafa;
+      cursor: pointer
+    }
+
+    .download {
+      background: #022c5a;
+      color: white;
+      border: 0
+    }
+
+    .cols {
+      display: flex;
+      gap: 16px;
+      align-items: flex-start;
+      flex-wrap: wrap
+    }
+
+    .col {
+      flex: 1 1 200px;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      min-width: 180px
+    }
+
+    .colHeader {
+      font-weight: 700;
+      margin-bottom: 6px
+    }
+
+    .question {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 10px;
+      border-radius: 8px;
+      border: 1px solid #f0f0f0;
+      background: #fff;
+    }
+
+    .qnum {
+      width: 54px;
+      min-width: 54px;
+      height: 36px;
+      border-radius: 8px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: #f2f2f2;
+      font-weight: 700;
+    }
+
+    .qText {
+      flex: 0 0 auto;
+      font-size: 14px;
+    }
+
+    .opts {
+      display: flex;
+      gap: var(--gap);
+    }
+
+    .opt {
+      width: var(--circle-size);
+      height: var(--circle-size);
+      border-radius: 50%;
+      border: 2px solid #bbb;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 700;
+      user-select: none;
+      cursor: pointer;
+      background: transparent;
+      transition: all .12s ease;
+    }
+
+    .opt:hover {
+      transform: scale(1.06)
+    }
+
+    .opt.active {
+      background: var(--accent);
+      color: white;
+      border-color: var(--accent)
+    }
+
+    .opt.correct {
+      background: #2e7d32 !important;
+      color: #fff;
+      border-color: #2e7d32 !important
+    }
+
+    .opt.wrong {
+      background: #c62828 !important;
+      color: #fff;
+      border-color: #c62828 !important
+    }
+
+    .legend {
+      font-size: 13px;
+      color: #666;
+      margin-bottom: 10px
+    }
+
+    .footer {
+      margin-top: 12px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center
+    }
+
+    .small {
+      font-size: 13px;
+      color: #666
+    }
+    .timerBox {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      position: fixed;
+      bottom: 10px;
+      right: 20px;
+    }
+    #timerBox {
+      padding: 4px 10px;
+      border-radius: 999px;
+      border: 1px solid #ddd;
+      background: #f9f9fb;
+      font-weight: 600;
+      font-size: 13px;
+      white-space: nowrap;
+    }
+
+    textarea {
+      font-family: inherit
+    }
+
+    /* topbar that holds image + notes */
+    .topbar {
+      position: sticky;
+      top: 0;
+      background: #fff;
+      z-index: 80;
+      padding: 10px 0;
+      border-bottom: 1px solid #ddd;
+      display: flex;
+      gap: 12px;
+      align-items: flex-start;
+      flex-wrap: wrap;
+      max-height: none;
+      overflow: visible;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.03);
+    }
+
+    .imgWrap {
+      max-height: 220px;
+      max-width: 100%;
+      overflow: auto;
+      border-radius: 6px;
+      position: relative;
+      padding-top: 0;
+    }
+
+    #pageImagePreview {
+      display: block;
+      width: 100%;
+      height: auto;
+      max-width: none;
+      object-fit: contain;
+      transform-origin: center center;
+      transition: transform .12s ease, width .12s ease;
+      margin-top: 0;
+      margin-bottom: 0;
+      margin-left: auto;
+      margin-right: auto;
+      border-radius: 6px;
+      border: 1px solid #e0e0e0;
+    }
+
+    .zoom-controls {
+      display: flex;
+      gap: 8px;
+      justify-content: center;
+      align-items: center;
+      margin-top: 6px;
+      position: sticky;
+      top: 8px;
+      z-index: 99;
+      background: transparent;
+      padding: 4px 0;
+    }
+
+    .selected-wrap {
+      position: relative
+    }
+
+    .copy-btn-inside {
+      position: absolute;
+      top: 8px;
+      right: 8px;
+      z-index: 5;
+      padding: 6px 10px;
+      border-radius: 6px;
+      border: 1px solid #ccc;
+      background: #fff;
+      cursor: pointer
+    }
+
+    .zoom-btn {
+      padding: 6px 8px;
+      border-radius: 6px;
+      border: 1px solid #ccc;
+      background: #fff;
+      cursor: pointer
+    }
+
+    @media (max-width:900px) {
+      .cols {
+        flex-direction: column
+      }
+    }
+
+    /* ===== NOTES MODE: WHEN TEXT PASTED IN pageNotes (IMAGE 2 STYLE) ===== */
+    body.notes-mode .question {
+      display: block;
+      padding: 8px 8px 10px;
+    }
+
+    body.notes-mode .qnum {
+      display: inline-block;
+      width: auto;
+      min-width: 0;
+      height: auto;
+      border-radius: 0;
+      background: transparent;
+      padding: 0;
+      margin-right: 4px;
+    }
+
+    body.notes-mode .qText {
+      display: inline;
+      font-size: 14px;
+    }
+
+    body.notes-mode .opts {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+      margin-top: 4px;
+    }
+
+    body.notes-mode .opt {
+      width: auto;
+      height: auto;
+      border-radius: 0;
+      border: none;
+      justify-content: flex-start;
+      transform: none !important;
+    }
+
+    body.notes-mode .opt:hover {
+      transform: none;
+      text-decoration: underline;
+    }
+
+    /* ===== START OVERLAY + TIMER ===== */
+    .overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(0, 0, 0, 0.65);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 9999;
+    }
+
+    .overlay-card {
+      background: #ffffff;
+      padding: 22px 26px;
+      border-radius: 14px;
+      box-shadow: 0 10px 40px rgba(0, 0, 0, 0.35);
+      max-width: 360px;
+      width: 90%;
+      text-align: center;
+    }
+
+    .overlay-card h2 {
+      margin: 0 0 10px;
+      font-size: 20px;
+    }
+
+    .overlay-card p {
+      margin: 0 0 18px;
+      font-size: 14px;
+      color: #555;
+    }
+
+    .overlay-card button {
+      padding: 10px 18px;
+      border-radius: 999px;
+      border: 0;
+      background: #022c5a;
+      color: #fff;
+      font-weight: 600;
+      cursor: pointer;
+      font-size: 15px;
+    }
+
+    .overlay-card button:hover {
+      transform: translateY(-1px);
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.25);
+    }
+
+    #toggleNotesBtn,
+    #toggleKeyBtn {
+      padding: 4px 8px;
+      font-size: 12px;
+    }
+
+/* ===== IMAGE INPUT STYLING ===== */
+#pageImageInput {
+  width: 98%;
+  padding: 10px;
+  border: 2px dashed #aaa;
+  border-radius: 8px;
+  background: #fafafa;
+  cursor: pointer;
+  font-size: 14px;
+  transition: all 0.2s ease;
+}
+
+#pageImageInput:hover {
+  border-color: #022c5a;
+  background: #f0f4ff;
+}
+
+#pageImageInput::file-selector-button {
+  padding: 8px 14px;
+  border-radius: 6px;
+  border: none;
+  background: #022c5a;
+  color: white;
+  font-weight: 600;
+  cursor: pointer;
+  margin-right: 10px;
+  transition: background 0.2s ease;
+}
+
+#pageImageInput::file-selector-button:hover {
+  background: #044a9c;
+}
+
+.zoom-controls {
+  display: none;
+}
+
+#resetBtn {
+   background: #BF1A1A;
+   color: white;
+}
+
+/* From Uiverse.io by andrew-demchenk0 */ 
+.button {
+  --font-color: #323232;
+  --bg-color: #fff;
+  --main-color: #323232;
+  min-width: 140px;
+  max-width: 300 px;
+  height: 40px;
+  border-radius: 5px;
+  border: 2px solid var(--main-color);
+  background-color: var(--bg-color);
+  box-shadow: 4px 4px var(--main-color);
+  font-size: 17px;
+  font-weight: 600;
+  color: var(--font-color);
+  cursor: pointer;
+  margin: 10px 0px;
+}
+
+.button:active {
+  box-shadow: 0px 0px var(--main-color);
+  transform: translate(3px, 3px);
+}
+
+  </style>
+</head>
+
+<body>
+  <!-- Start overlay -->
+  <div id="startOverlay" class="overlay">
+    <div class="overlay-card">
+      <h2>Online Test</h2>
+      <p>প্রস্তুত হলে <strong>Start</strong> চাপুন।</p>
+      <button id="startBtn" type="button">Start</button>
+    </div>
+  </div>
+  <!-- /Start overlay -->
+
+  <div class="container">
+    <div class="heading">Online Test</div>
+        <!-- Notes header + toggle button -->
+        <div
+          style="display:flex; align-items:center; justify-content:center; margin-top:10px; margin-bottom:6px">
+          <div for="pageNotes" style="font-weight:600; display:block; margin:0">
+          <button class="button" id="toggleNotesBtn">
+  টাইপকৃত প্রশ্ন অ্যাড করতে ক্লিক করুন→
+          </button>
+          </div>
+        </div>
+                   
+        <!-- Notes container (hidden by default) -->
+        <div id="notesContainer" style="display:none;">
+          <textarea id="pageNotes"
+            placeholder="You can paste question + options here, e.g.: ১। 'চিকুর' এর প্রতিশব্দ নয় কোনটি? ক। কর খ। কুন্তল গ। চুল ঘ। কেশ"
+            style="width:98%; height:100px; padding:10px; border:1px solid #ccc; border-radius:6px; font-size:14px; overflow:auto"></textarea>
+        </div>
+      <label for="pageImageInput" style="font-weight:600; display:block; margin:8px 0px">হাতে লেখা ছবি সিলেক্ট করুন</label>
+    <div class="topbar" id="topbar">
+      <div style="flex:1; min-width:260px">
+        <input id="pageImageInput" type="file" accept="image/*" style="display:block; margin-bottom:8px">
+        <div class="imgWrap">
+          <img id="pageImagePreview" alt="Preview" style="display:none">
+        </div>
+
+        <div class="zoom-controls" aria-hidden="false">
+          <button id="zoomOutBtn" class="zoom-btn" type="button" title="Zoom out">−</button>
+          <button id="zoomResetBtn" class="zoom-btn" type="button" title="Reset zoom">Reset</button>
+          <button id="zoomInBtn" class="zoom-btn" type="button" title="Zoom in">+</button>
+          <button id="rotateBtn" class="zoom-btn" type="button" title="Rotate image 90°">↻ Rotate</button>
+        </div>
+      <!-- Timer display (time used) -->
+            <div id="timerBox" class="small timerBox">
+        Time used: <span id="timerDisplay">00:00</span>
+            </div>
+
+      </div>
+
+    </div>
+	
+    <div class="footer">
+      <div class="small">Total questions: <strong id="total">30</strong></div>
+      <div class="small">Answered: <strong id="answered">0</strong></div>
+    </div>
+	
+    <div id="grid" class="cols" aria-live="polite" style="margin-top:12px"></div>
+	
+    <div style="margin-top:12px; display:flex; gap:8px; align-items:center">
+      <input id="addCount" type="number" min="1" placeholder="Add questions"
+        style="padding:8px; width:120px; border:1px solid #ccc; border-radius:6px">
+      <button id="addBtn">Add More OMR</button>
+    </div>
+
+    <div style="flex:1; min-width:260px; margin-top:12px">
+      <label for="selectedBox" style="font-weight:600; display:block; margin-bottom:6px">Selected Answers:</label>
+      <div class="selected-wrap">
+        <button id="copySelectedBtn" class="copy-btn-inside">Copy</button>
+        <textarea id="selectedBox"
+          style="width:98%; height:140px; padding:10px; border:1px solid #ccc; border-radius:6px; font-size:15px"
+          readonly></textarea>
+      </div>
+    </div>
+
+
+    <!-- Answer key area with toggle -->
+    <div style="flex:1; min-width:260px; margin-top:12px">
+      <div style="display:flex; align-items:center; justify-content: center; margin-bottom:6px">
+<button class="button" id="toggleKeyBtn">
+  উত্তরপত্র অ্যাড করতে ক্লিক করুন→
+</button>
+
+      </div>
+
+      <div id="keyBoxContainer" style="display:none;">
+        <textarea id="keyBox" placeholder="Paste AnswerSheet. e.g: ১.ক, ২.গ, ৩.খ ..."
+          style="width:98%; height:140px; padding:10px; border:1px solid #ccc; border-radius:6px; font-size:15px"></textarea>
+        <div style="margin-top:8px; display:flex; gap:8px">
+          <button id="checkBtn">Check Answers</button>
+          <button id="clearResultsBtn">Clear Results</button>
+        </div>
+    <div id="scoreBox" style="margin-top:14px; font-size:16px; font-weight:600; color:#333">Right: 0 | Wrong: 0 | Score:0 | 30</div>
+      </div>
+    </div>
+	
+
+    <div class="controls" style="margin-top:12px">
+      <button id="resetBtn">Reset & Clear All Data</button>
+      <button id="downloadBtn" class="download">Download answers</button>
+    </div>
+
+	
+  </div>
+
+<script>
+  // Storage keys
+  const LS_PREFIX = 'omr_page_v1_';
+  const LS_KEYS = {
+    questions: LS_PREFIX + 'questions',
+    selections: LS_PREFIX + 'selections',
+    key: LS_PREFIX + 'key',
+    notes: LS_PREFIX + 'notes',
+    image: LS_PREFIX + 'image',
+    imageScale: LS_PREFIX + 'imageScale',     // zoom factor (1 = 100%)
+    imageRotation: LS_PREFIX + 'imageRotation'
+  };
+
+  // Configuration
+  let QUESTIONS = Number(localStorage.getItem(LS_KEYS.questions)) || 30;
+  const OPTIONS = ['ক', 'খ', 'গ', 'ঘ'];
+
+  const grid = document.getElementById('grid');
+  const answeredEl = document.getElementById('answered');
+
+  // ===== TIMER (TIME USED) =====
+  const timerDisplay = document.getElementById('timerDisplay');
+  const startOverlay = document.getElementById('startOverlay');
+  const startBtn = document.getElementById('startBtn');
+
+  let elapsedSeconds = 0;
+  let timerInterval = null;
+
+  function formatTime(secs) {
+    const m = Math.floor(secs / 60);
+    const s = secs % 60;
+    const mm = String(m).padStart(2, '0');
+    const ss = String(s).padStart(2, '0');
+    return `${mm}:${ss}`;
+  }
+
+  function renderTimer() {
+    if (!timerDisplay) return;
+    timerDisplay.textContent = formatTime(elapsedSeconds);
+  }
+
+  function startTimer() {
+    if (timerInterval) return;
+    renderTimer();
+    timerInterval = setInterval(() => {
+      elapsedSeconds++;
+      renderTimer();
+    }, 1000);
+  }
+
+  if (startBtn) {
+    startBtn.addEventListener('click', () => {
+      if (startOverlay) {
+        startOverlay.style.display = 'none';
+      }
+      elapsedSeconds = 0;
+      startTimer();
+    });
+  }
+
+  renderTimer();
+
+  function toBengaliDigits(num, width = 2) {
+    const map = { '0': '০', '1': '১', '2': '২', '3': '৩', '4': '৪', '5': '৫', '6': '৬', '7': '৭', '8': '৮', '9': '৯' };
+    let s = String(num).padStart(width, '0');
+    return s.split('').map(ch => map[ch] || ch).join('');
+  }
+
+  function loadSelections() {
+    try {
+      const raw = localStorage.getItem(LS_KEYS.selections);
+      return raw ? JSON.parse(raw) : {};
+    } catch (e) { return {}; }
+  }
+  function saveSelections(map) { localStorage.setItem(LS_KEYS.selections, JSON.stringify(map)); }
+
+  function ensureColumn(colIndex) {
+    let col = document.getElementById('col' + colIndex);
+    if (!col) {
+      col = document.createElement('div');
+      col.className = 'col';
+      col.id = 'col' + colIndex;
+      const header = document.createElement('div');
+      header.className = 'colHeader';
+      const start = (colIndex - 1) * 10 + 1;
+      const end = (colIndex) * 10;
+      header.textContent = `${start} - ${end}`;
+      col.appendChild(header);
+      grid.appendChild(col);
+    }
+    return col;
+  }
+
+  function addQuestion(i, savedSelection) {
+    const colIndex = Math.floor((i - 1) / 10) + 1;
+    const parent = ensureColumn(colIndex);
+
+    const q = document.createElement('div');
+    q.className = 'question';
+    q.dataset.q = i;
+
+    const qnum = document.createElement('div');
+    qnum.className = 'qnum';
+    qnum.textContent = i;
+    q.appendChild(qnum);
+
+    const qText = document.createElement('div');
+    qText.className = 'qText';
+    qText.textContent = '';
+    q.appendChild(qText);
+
+    const opts = document.createElement('div');
+    opts.className = 'opts';
+    OPTIONS.forEach((label, idx) => {
+      const o = document.createElement('button');
+      o.type = 'button';
+      o.className = 'opt';
+      o.dataset.opt = idx;
+      o.dataset.short = label;
+      o.dataset.full = label;
+      o.dataset.label = label;
+      o.setAttribute('aria-pressed', 'false');
+      o.textContent = label;
+      if (savedSelection && savedSelection === label) {
+        o.classList.add('active');
+        o.setAttribute('aria-pressed', 'true');
+      }
+      opts.appendChild(o);
+    });
+    q.appendChild(opts);
+    parent.appendChild(q);
+  }
+
+  function buildFromStorage() {
+    grid.innerHTML = '';
+    const selections = loadSelections();
+    for (let i = 1; i <= QUESTIONS; i++) {
+      addQuestion(i, selections[i]);
+    }
+    document.getElementById('total').textContent = QUESTIONS;
+  }
+
+  buildFromStorage();
+
+  grid.addEventListener('click', (e) => {
+    const btn = e.target.closest('.opt');
+    if (!btn) return;
+    const question = btn.closest('.question');
+    const qnum = question.dataset.q;
+
+    const siblings = question.querySelectorAll('.opt');
+    siblings.forEach(s => {
+      s.classList.remove('active');
+      s.setAttribute('aria-pressed', 'false');
+      s.classList.remove('correct', 'wrong');
+    });
+
+    btn.classList.add('active');
+    btn.setAttribute('aria-pressed', 'true');
+
+    const selections = loadSelections();
+    const short = btn.dataset.short || btn.dataset.label;
+    selections[qnum] = short;
+    saveSelections(selections);
+
+    updateAnsweredCount();
+    updateSelectedBox();
+  });
+
+  grid.addEventListener('keydown', (e) => {
+    const btn = e.target.closest('.opt');
+    if (!btn) return;
+    if (e.key === ' ' || e.key === 'Enter') {
+      e.preventDefault();
+      btn.click();
+    }
+  });
+
+  function updateAnsweredCount() {
+    const questions = document.querySelectorAll('.question');
+    let n = 0;
+    questions.forEach(q => { if (q.querySelector('.opt.active')) n++; });
+    answeredEl.textContent = n;
+  }
+
+  // Reset all
+  document.getElementById('resetBtn').addEventListener('click', () => {
+    if (!confirm('This will clear ALL saved data for this OMR page (answers, key, notes, image, question count). Continue?')) return;
+    Object.values(LS_KEYS).forEach(k => localStorage.removeItem(k));
+    localStorage.removeItem(LS_KEYS.selections);
+    location.reload();
+  });
+
+  // ===== Download answers as TXT =====
+  document.getElementById('downloadBtn').addEventListener('click', () => {
+    // Ensure latest selection text is reflected
+    updateSelectedBox();
+    const txt = document.getElementById('selectedBox').value || '';
+    const blob = new Blob([txt + '\n'], { type: 'text/plain;charset=utf-8' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = 'answers.txt';
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    URL.revokeObjectURL(url);
+  });
+
+  function updateSelectedBox() {
+    const box = document.getElementById('selectedBox');
+    let text = '';
+    document.querySelectorAll('.question').forEach(q => {
+      const n = q.dataset.q;
+      const sel = q.querySelector('.opt.active');
+      if (sel) {
+        const qn = toBengaliDigits(Number(n), 2);
+        const full = sel.dataset.full || sel.dataset.short || sel.dataset.label;
+        text += `${qn}. ${full}\n`;
+      }
+    });
+    box.value = text.trim();
+  }
+
+  function bnDigitsToNumber(str) {
+    const map = { '০': '0', '১': '1', '২': '2', '৩': '3', '৪': '4', '৫': '5', '৬': '6', '৭': '7', '৮': '8', '৯': '9' };
+    return str.replace(/[০-৯]/g, ch => map[ch] || ch);
+  }
+
+  function parseKey(text) {
+    const map = {};
+    const re = /([0-9০-৯]+)\s*[^0-9০-৯\w]*\s*([কখগঘ])/g;
+    let m;
+    while ((m = re.exec(text)) !== null) {
+      let numStr = m[1].trim();
+      numStr = bnDigitsToNumber(numStr);
+      const n = parseInt(numStr, 10);
+      if (!isNaN(n) && n >= 1 && n <= QUESTIONS) {
+        map[n] = m[2];
+      }
+    }
+    return map;
+  }
+
+  function clearResults() {
+    document.querySelectorAll('.opt').forEach(o => { o.classList.remove('correct', 'wrong'); });
+  }
+
+  function applyKey(keyMap) {
+    clearResults();
+    for (let i = 1; i <= QUESTIONS; i++) {
+      const q = document.querySelector(`.question[data-q="${i}"]`);
+      if (!q) continue;
+      const sel = q.querySelector('.opt.active');
+      const key = keyMap[i];
+      if (!key) continue;
+
+      const correctOpt = Array.from(q.querySelectorAll('.opt')).find(x => (x.dataset.short === key) || (x.dataset.full && x.dataset.full.trim().startsWith(key)));
+
+      if (sel) {
+        if ((sel.dataset.short === key) || (sel.dataset.full && sel.dataset.full.trim().startsWith(key))) {
+          sel.classList.add('correct');
+        } else {
+          sel.classList.add('wrong');
+          if (correctOpt) correctOpt.classList.add('correct');
+        }
+      } else {
+        if (correctOpt) correctOpt.classList.add('correct');
+      }
+    }
+  }
+
+  document.getElementById('checkBtn').addEventListener('click', () => {
+    const text = document.getElementById('keyBox').value || '';
+    localStorage.setItem(LS_KEYS.key, text);
+    const keyMap = parseKey(text);
+    applyKey(keyMap);
+    updateScore();
+  });
+
+  (function wireCopyButton() {
+    const copyBtn = document.getElementById('copySelectedBtn');
+    if (!copyBtn) return;
+    copyBtn.addEventListener('click', async () => {
+      updateSelectedBox();
+      const txt = document.getElementById('selectedBox').value || '';
+      if (!txt) { alert('No answers to copy.'); return; }
+      try {
+        await navigator.clipboard.writeText(txt);
+        const prev = copyBtn.textContent;
+        copyBtn.textContent = 'Copied!';
+        copyBtn.disabled = true;
+        setTimeout(() => { copyBtn.textContent = prev; copyBtn.disabled = false; }, 1600);
+      }
+      catch (err) {
+        const ta = document.createElement('textarea');
+        ta.value = txt;
+        ta.style.position = 'fixed';
+        ta.style.left = '-9999px';
+        document.body.appendChild(ta);
+        ta.focus();
+        ta.select();
+        try {
+          document.execCommand('copy');
+          alert('Copied!');
+        } catch (e) {
+          alert('Copy failed — select and copy manually.');
+        }
+        ta.remove();
+      }
+    });
+  })();
+
+  document.getElementById('clearResultsBtn').addEventListener('click', () => { clearResults(); updateScore(); });
+
+  function updateScore() {
+    let right = 0, wrong = 0;
+    document.querySelectorAll('.question').forEach(q => {
+      const sel = q.querySelector('.opt.active');
+      if (!sel) return;
+      if (sel.classList.contains('correct')) right++;
+      else if (sel.classList.contains('wrong')) wrong++;
+    });
+    const total = (right - wrong * 0.5).toFixed(2);
+    document.getElementById('scoreBox').textContent = `Right: ${right} | Wrong: ${wrong} | Score: ${total} / ${QUESTIONS}`;
+  }
+
+  document.getElementById('addBtn').addEventListener('click', () => {
+    const val = parseInt(document.getElementById('addCount').value, 10);
+    if (!val || val < 1) return;
+    const start = QUESTIONS + 1;
+    QUESTIONS += val;
+    localStorage.setItem(LS_KEYS.questions, String(QUESTIONS));
+    document.getElementById('total').textContent = QUESTIONS;
+
+    for (let i = start; i <= QUESTIONS; i++) addQuestion(i);
+
+    updateAnsweredCount();
+    updateSelectedBox();
+    updateScore();
+  });
+
+  const imgInput = document.getElementById('pageImageInput');
+  const imgPreview = document.getElementById('pageImagePreview');
+  const zoomControls = document.querySelector('.zoom-controls');
+
+  function updateZoomControlsVisibility() {
+    if (!zoomControls) return;
+    if (imgPreview && imgPreview.src) {
+      zoomControls.style.display = 'flex';
+    } else {
+      zoomControls.style.display = 'none';
+    }
+  }
+
+  imgInput.addEventListener('change', (e) => {
+    const f = e.target.files && e.target.files[0];
+    if (!f) {
+      imgPreview.style.display = 'none';
+      imgPreview.src = '';
+      localStorage.removeItem(LS_KEYS.image);
+      updateZoomControlsVisibility();
+      return;
+    }
+    const reader = new FileReader();
+    reader.onload = function (ev) {
+      const dataUrl = ev.target.result;
+      imgPreview.src = dataUrl;
+      imgPreview.style.display = 'block';
+      try {
+        localStorage.setItem(LS_KEYS.image, dataUrl);
+      } catch (err) {
+        console.warn('Image too large to store in localStorage');
+      }
+      updateZoomControlsVisibility();
+    };
+    reader.readAsDataURL(f);
+  });
+
+  const notesEl = document.getElementById('pageNotes');
+  const notesContainer = document.getElementById('notesContainer');
+  const toggleNotesBtn = document.getElementById('toggleNotesBtn');
+
+  if (notesEl) {
+    notesEl.value = localStorage.getItem(LS_KEYS.notes) || '';
+    notesEl.addEventListener('input', () => {
+      localStorage.setItem(LS_KEYS.notes, notesEl.value);
+      parseNotesToOMR(notesEl.value);
+    });
+  }
+
+  if (toggleNotesBtn && notesContainer) {
+    toggleNotesBtn.addEventListener('click', () => {
+      const isHidden = notesContainer.style.display === 'none' || notesContainer.style.display === '';
+      if (isHidden) {
+        notesContainer.style.display = 'block';
+        toggleNotesBtn.textContent = 'Hide BOX';
+      } else {
+        notesContainer.style.display = 'none';
+        toggleNotesBtn.textContent = 'Show BOX';
+      }
+    });
+  }
+
+  // Answer key toggle
+  const keyBoxContainer = document.getElementById('keyBoxContainer');
+  const toggleKeyBtn = document.getElementById('toggleKeyBtn');
+
+  if (toggleKeyBtn && keyBoxContainer) {
+    toggleKeyBtn.addEventListener('click', () => {
+      const isHidden = keyBoxContainer.style.display === 'none' || keyBoxContainer.style.display === '';
+      if (isHidden) {
+        keyBoxContainer.style.display = 'block';
+        toggleKeyBtn.textContent = 'Hide AnswerSheet';
+      } else {
+        keyBoxContainer.style.display = 'none';
+        toggleKeyBtn.textContent = 'Show AnswerSheet';
+      }
+    });
+  }
+
+  // restore key box if present
+  const keyBox = document.getElementById('keyBox');
+  if (localStorage.getItem(LS_KEYS.key)) {
+    keyBox.value = localStorage.getItem(LS_KEYS.key);
+    const km = parseKey(keyBox.value || '');
+    applyKey(km);
+  }
+
+  // ====== ZOOM + ROTATE CONTROLS FOR IMAGE ======
+  const zoomInBtn = document.getElementById('zoomInBtn');
+  const zoomOutBtn = document.getElementById('zoomOutBtn');
+  const zoomResetBtn = document.getElementById('zoomResetBtn');
+  const rotateBtn = document.getElementById('rotateBtn');
+
+  const MIN_ZOOM = 0.5;
+  const MAX_ZOOM = 3;
+  const ZOOM_STEP = 0.1;
+  const ROT_STEP = 90;
+
+  let zoom = parseFloat(localStorage.getItem(LS_KEYS.imageScale)) || 1;
+  let rotation = parseFloat(localStorage.getItem(LS_KEYS.imageRotation)) || 0;
+
+  function applyTransform() {
+    imgPreview.style.width = (zoom * 100) + '%';
+    imgPreview.style.transform = `rotate(${rotation}deg)`;
+
+    localStorage.setItem(LS_KEYS.imageScale, String(zoom));
+    localStorage.setItem(LS_KEYS.imageRotation, String(rotation));
+  }
+
+  zoomInBtn.addEventListener('click', () => {
+    if (!imgPreview.src) return;
+    zoom = Math.min(MAX_ZOOM, +(zoom + ZOOM_STEP).toFixed(2));
+    applyTransform();
+  });
+
+  zoomOutBtn.addEventListener('click', () => {
+    if (!imgPreview.src) return;
+    zoom = Math.max(MIN_ZOOM, +(zoom - ZOOM_STEP).toFixed(2));
+    applyTransform();
+  });
+
+  zoomResetBtn.addEventListener('click', () => {
+    if (!imgPreview.src) return;
+    zoom = 1;
+    applyTransform();
+    const wrap = document.querySelector('.imgWrap');
+    if (wrap) {
+      wrap.scrollTop = 0;
+      wrap.scrollLeft = 0;
+    }
+  });
+
+  if (rotateBtn) {
+    rotateBtn.addEventListener('click', () => {
+      if (!imgPreview.src) return;
+      rotation = (rotation + ROT_STEP) % 360;
+      applyTransform();
+    });
+  }
+
+  imgPreview.addEventListener('load', () => {
+    applyTransform();
+    imgPreview.style.display = 'block';
+    updateZoomControlsVisibility();
+  });
+
+  const savedImage = localStorage.getItem(LS_KEYS.image);
+  if (savedImage) {
+    imgPreview.src = savedImage;
+    imgPreview.style.display = 'block';
+  }
+
+  // Hide/show zoom controls appropriately on initial load
+  updateZoomControlsVisibility();
+
+  updateAnsweredCount();
+  updateSelectedBox();
+  updateScore();
+
+function parseNotesToOMR(text) {
+  if (!text || !text.trim()) {
+    document.body.classList.remove('notes-mode');
+    return;
+  }
+
+  document.body.classList.add('notes-mode');
+
+  // Normalize text
+  const lines = text
+    .replace(/\r/g, '')
+    .split('\n')
+    .map(l => l.trim())
+    .filter(Boolean);
+
+  let currentQ = null;
+  let buffer = [];
+
+  function flush() {
+    if (!currentQ || buffer.length === 0) return;
+
+    const qNum = currentQ;
+    const joined = buffer.join(' ');
+
+    const parts = joined.split(/(?=(?:[কখগঘ]|[A-Da-d])[\.\)])/g).map(s => s.trim());
+    const qText = parts.shift() || '';
+
+    const opts = parts.map(p => {
+      const m = p.match(/^([কখগঘA-Da-d])[\.\)]\s*(.*)$/);
+      if (!m) return null;
+      return {
+        short: m[1].toUpperCase(),
+        full: `${m[1].toUpperCase()}. ${m[2].trim()}`
+      };
+    }).filter(Boolean);
+
+    const qEl = document.querySelector(`.question[data-q="${qNum}"]`);
+    if (!qEl) return;
+
+    qEl.querySelector('.qnum').textContent = toBengaliDigits(qNum, 2) + '.';
+    qEl.querySelector('.qText').textContent = qText;
+
+    const btns = qEl.querySelectorAll('.opt');
+    btns.forEach((btn, i) => {
+      if (opts[i]) {
+        btn.dataset.short = opts[i].short;
+        btn.dataset.full = opts[i].full;
+        btn.dataset.label = opts[i].full;
+        btn.textContent = opts[i].full;
+      }
+    });
+  }
+
+  for (const line of lines) {
+    // STRICT: question number must be at line start
+    const qm = line.match(/^([0-9০-৯]{1,3})[\.\)]\s*(.*)$/);
+
+    if (qm) {
+      // Flush previous question
+      flush();
+
+      currentQ = parseInt(bnDigitsToNumber(qm[1]), 10);
+      buffer = [];
+
+      // Everything after FIRST number is text (even if more numbers exist)
+      if (qm[2]) buffer.push(qm[2]);
+    } else if (currentQ !== null) {
+      buffer.push(line);
+    }
+  }
+
+  flush();
+
+  updateAnsweredCount();
+  updateSelectedBox();
+}
+
+
+  if (notesEl && notesEl.value) parseNotesToOMR(notesEl.value);
+</script>
+
+</body>
+
+</html>
